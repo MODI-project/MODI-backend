@@ -1,7 +1,6 @@
 package kuit.modi.domain;
 
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Getter
