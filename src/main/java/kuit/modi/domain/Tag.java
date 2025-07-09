@@ -4,20 +4,17 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "character_type")
+@Table(name = "tag")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class CharacterType {
+public class Tag {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 30)
+    @Column(nullable = false, unique = true, length = 50)
     private String name;
-
-    @Column(name = "image_url", columnDefinition = "TEXT")
-    private String imageUrl; // 사용할지 여부는 나중에 결정
 }
