@@ -1,0 +1,19 @@
+# Git
+.git
+.gitignore
+
+# Gradle
+.gradle
+build
+
+# IDE
+*.iml
+.idea/
+
+# 환경 변수 파일
+.env
+
+# OS/에디터 임시 파일
+*.log
+*.swp
+.DS_Store
