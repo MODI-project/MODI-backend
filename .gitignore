@@ -38,3 +38,6 @@ out/
 
 ### env ###
 .env
+
+### application.yml ###
+application.yml
