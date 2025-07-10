@@ -1,15 +1,14 @@
 package kuit.modi.repository;
 
-import kuit.modi.domain.User;
-import org.springframework.data.jpa.repository.JpaRepository;
+import kuit.modi.domain.Member;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
 public class UserRepository {
-    Optional<User> findByEmail(String email){
-        return Optional.of(new User("temp"));
+    Optional<Member> findByEmail(String email){
+        return Optional.of(new Member("temp"));
     }
     boolean existsByNickname(String nickname){
         return true;

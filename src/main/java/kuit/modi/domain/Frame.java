@@ -4,12 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "character_type")
+@Table(name = "frame")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class CharacterType {
+public class Frame {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,6 +18,6 @@ public class CharacterType {
     @Column(nullable = false, unique = true, length = 30)
     private String name;
 
-    @Column(name = "image_url", columnDefinition = "TEXT")
-    private String imageUrl; // 사용할지 여부는 나중에 결정
+    @Column(name = "style_info", columnDefinition = "TEXT")
+    private String styleInfo; // 프레임 스타일 관련 JSON 등 저장 가능
 }
