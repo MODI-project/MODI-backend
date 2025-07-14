@@ -69,4 +69,30 @@ public class Diary {
     // Diary → Image: 1:1 (역방향은 Image에서 처리)
     @OneToOne(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true)
     private Image image;
+
+    public static Diary create(
+            String content,
+            String summary,
+            LocalDate date,
+            Member member,
+            Emotion emotion,
+            Tone tone,
+            Location location,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
+        Diary diary = new Diary();
+        diary.setContent(content);
+        diary.setSummary(summary);
+        diary.setDate(date);
+        diary.setMember(member);
+        diary.setEmotion(emotion);
+        diary.setTone(tone);
+        diary.setLocation(location);
+        diary.setCreatedAt(createdAt);
+        diary.setUpdatedAt(updatedAt);
+        diary.setFavorite(false); // 기본값
+
+        return diary;
+    }
 }
