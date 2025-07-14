@@ -1,8 +1,10 @@
 package kuit.modi.service;
 
+import kuit.modi.domain.CharacterType;
 import kuit.modi.domain.Member;
 import kuit.modi.dto.UserRequest;
 import kuit.modi.dto.UserResponse;
+import kuit.modi.repository.CharacterTypeRepository;
 import kuit.modi.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,17 +15,22 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class MemberService {
     private final MemberRepository memberRepository;
+    private final CharacterTypeRepository characterTypeRepository;
 
-    public UserResponse createUser(UserRequest requestDto) {
-        return new UserResponse();
+    public Member completeSignup(Long memberId, UserRequest request) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+
+        CharacterType characterType = characterTypeRepository.findById(request.getCharacterId())
+                .orElseThrow(() -> new IllegalArgumentException("잘못된 캐릭터 유형입니다."));
+
+        member.setNickname(request.getNickname());
+        member.setCharacterType(characterType);
+
+        return memberRepository.save(member);
     }
 
-    public UserResponse getUser(Long id) {
-        return new UserResponse();
-    }
-
-    public UserResponse completeSignup(UserRequest requestDto) {
-
-        return new UserResponse();
+    public Optional<Member> findById(Long userId) {
+        return memberRepository.findById(userId);
     }
 }
