@@ -46,6 +46,7 @@ public class OAuthController {
 
         // jwt를 생성해서 쿠키에 포함하여 전달
         String jwt = jwtService.createToken(member.getId());
+        System.out.println(jwt);
         ResponseCookie cookie = ResponseCookie.from("access_token", jwt)
                 .httpOnly(true)
                 .secure(true)
@@ -57,7 +58,8 @@ public class OAuthController {
         response.addHeader("Set-Cookie", cookie.toString());
 
         // 프론트엔드로 리디렉션, isNew 여부 전달
-        String redirectUrl = "https://your-frontend.com/oauth/callback?isNew=" + isNew ;
-        response.sendRedirect(redirectUrl);
+        //String redirectUrl = "https://your-frontend.com/oauth/callback?isNew=" + isNew ;
+        String redirectUrl = "localhost:8080/oauth2/authorize/google";
+        //response.sendRedirect(redirectUrl);
     }
 }
