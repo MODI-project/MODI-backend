@@ -39,5 +39,5 @@ out/
 ### env ###
 .env
 
-### application.yml ###
-application.yml
+### application-secret.yml ###
+application-secret.yml
