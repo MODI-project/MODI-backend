@@ -1,9 +1,9 @@
 package kuit.modi.domain;
 
 import jakarta.persistence.*;
-        import lombok.*;
+import lombok.*;
 
-        import java.time.LocalDateTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "member")
@@ -17,7 +17,7 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 10)
+    @Column(length = 10)
     private String nickname;
 
     @Column(nullable = false, unique = true, length = 100)
@@ -30,10 +30,21 @@ public class Member {
     private LocalDateTime updatedAt;
 
     @ManyToOne
-    @JoinColumn(name = "character_type_id", nullable = false)
+    @JoinColumn(name = "character_type_id")
     private CharacterType characterType;
 
     public Member(String email) {
         this.email = email;
+    }
+
+    @PrePersist
+    public void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }
