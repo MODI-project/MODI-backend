@@ -23,8 +23,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .headers(headers -> headers
-                        .addHeaderWriter(
-                                // h2 관련
+                        .addHeaderWriter(   // h2 console 관련
                                 new XFrameOptionsHeaderWriter(
                                         XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN
                                 )
