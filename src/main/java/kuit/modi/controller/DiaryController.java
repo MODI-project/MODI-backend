@@ -2,6 +2,7 @@ package kuit.modi.controller;
 
 import kuit.modi.domain.Member;
 import kuit.modi.dto.*;
+import kuit.modi.exception.InvalidDateException;
 import kuit.modi.service.DiaryQueryService;
 import kuit.modi.service.DiaryService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 @RestController
 @RequestMapping("/api/diaries")
@@ -64,6 +68,23 @@ public class DiaryController {
             @PathVariable Long diaryId
     ) {
         DiaryDetailResponse response = diaryQueryService.getDiaryDetail(diaryId, member);
+        return ResponseEntity.ok(response);
+    }
+
+    //일기 날짜 기반 조회 (메인 + 이전/다음)
+    @GetMapping
+    public ResponseEntity<DailyDiaryDetailResponse> getDailyDiaryDetail(
+            @AuthenticationPrincipal Member member,
+            @RequestParam String date
+    ) {
+        LocalDate parsedDate;
+        try {
+            parsedDate = LocalDate.parse(date);
+        } catch (DateTimeParseException e) {
+            throw new InvalidDateException();
+        }
+
+        DailyDiaryDetailResponse response = diaryQueryService.getDailyDetail(parsedDate, member);
         return ResponseEntity.ok(response);
     }
 

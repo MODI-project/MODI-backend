@@ -2,6 +2,7 @@
 package kuit.modi.service;
 
 import kuit.modi.domain.*;
+import kuit.modi.dto.DailyDiaryDetailResponse;
 import kuit.modi.dto.DiaryDetailResponse;
 import kuit.modi.dto.DiaryDetailResponse.*;
 import kuit.modi.exception.DiaryNotFoundException;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 //일기 조회 전용 서비스
 @Service
@@ -76,4 +78,56 @@ public class DiaryQueryService {
                 diary.getUpdatedAt()
         );
     }
+
+    //특정 날짜의 일기 중 하나를 메인으로, 양 옆 일기도 함께 조회
+    @Transactional(readOnly = true)
+    public DailyDiaryDetailResponse getDailyDetail(LocalDate date, Member member) {
+        List<Diary> diaries = diaryQueryRepository.findDiariesByDate(member.getId(), date);
+
+        if (diaries.isEmpty()) {
+            throw new DiaryNotFoundException();
+        }
+
+        // 메인 일기는 첫 번째
+        Diary main = diaries.get(0);
+        DailyDiaryDetailResponse.MainDiaryDto mainDto = toMainDto(main);
+
+        // 이전/다음은 인덱스 1, 2 기준
+        DailyDiaryDetailResponse.AdjacentDiaryDto previous = null;
+        DailyDiaryDetailResponse.AdjacentDiaryDto next = null;
+
+        if (diaries.size() > 1) {
+            next = toAdjacentDto(diaries.get(1));
+        }
+        if (diaries.size() > 2) {
+            previous = toAdjacentDto(diaries.get(2));
+        }
+
+        return new DailyDiaryDetailResponse(mainDto, previous, next);
+    }
+
+    private DailyDiaryDetailResponse.MainDiaryDto toMainDto(Diary diary) {
+        List<String> tags = diary.getDiaryTags().stream()
+                .map(dt -> dt.getTag().getName())
+                .limit(3)
+                .toList();
+
+        return new DailyDiaryDetailResponse.MainDiaryDto(
+                diary.getId(),
+                diary.getSummary(),
+                diary.getCreatedAt(),
+                diary.getImage() != null ? diary.getImage().getUrl() : null,
+                tags
+        );
+    }
+
+    private DailyDiaryDetailResponse.AdjacentDiaryDto toAdjacentDto(Diary diary) {
+        return new DailyDiaryDetailResponse.AdjacentDiaryDto(
+                diary.getId(),
+                diary.getSummary(),
+                diary.getCreatedAt(),
+                diary.getImage() != null ? diary.getImage().getUrl() : null
+        );
+    }
+
 }

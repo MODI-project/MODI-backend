@@ -5,10 +5,10 @@ import jakarta.persistence.PersistenceContext;
 import kuit.modi.domain.Diary;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-//일기 상세 조회 레포
 @Repository
 public class DiaryQueryRepository {
 
@@ -16,7 +16,7 @@ public class DiaryQueryRepository {
     private EntityManager em;
 
     /*
-     * diaryId에 해당하는 Diary를 연관 엔티티와 함께 조회합니다.
+     * diaryId에 해당하는 Diary를 연관 엔티티와 함께 조회
      * - Emotion, Tone, Location, Image, Tag 포함 fetch
      */
     public Optional<Diary> findDetailById(Long diaryId) {
@@ -33,5 +33,23 @@ public class DiaryQueryRepository {
                 .getResultList();
 
         return result.stream().findFirst();
+    }
+
+    /*
+     * 특정 날짜의 일기를 createdAt 기준으로 정렬하여 조회
+     */
+    public List<Diary> findDiariesByDate(Long memberId, LocalDate date) {
+        return em.createQuery(
+                        "SELECT d FROM Diary d " +
+                                "LEFT JOIN FETCH d.emotion " +
+                                "LEFT JOIN FETCH d.image " +
+                                "LEFT JOIN FETCH d.diaryTags dt " +
+                                "LEFT JOIN FETCH dt.tag " +
+                                "WHERE d.member.id = :memberId AND d.date = :date " +
+                                "ORDER BY d.createdAt ASC", Diary.class
+                )
+                .setParameter("memberId", memberId)
+                .setParameter("date", date)
+                .getResultList();
     }
 }
