@@ -5,7 +5,9 @@ import kuit.modi.domain.*;
 import kuit.modi.dto.DailyDiaryDetailResponse;
 import kuit.modi.dto.DiaryDetailResponse;
 import kuit.modi.dto.DiaryDetailResponse.*;
+import kuit.modi.dto.DiaryMonthlyItemDto;
 import kuit.modi.exception.DiaryNotFoundException;
+import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.repository.DiaryQueryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -129,5 +131,25 @@ public class DiaryQueryService {
                 diary.getImage() != null ? diary.getImage().getUrl() : null
         );
     }
+
+    //특정 연/월에 해당하는 일기 목록 조회
+    @Transactional(readOnly = true)
+    public List<DiaryMonthlyItemDto> getMonthlyDiaries(int year, int month, Member member) {
+        if (month < 1 || month > 12) {
+            throw new InvalidYearMonthException();
+        }
+
+        List<Diary> diaries = diaryQueryRepository.findByYearMonth(member.getId(), year, month);
+
+        return diaries.stream()
+                .map(diary -> new DiaryMonthlyItemDto(
+                        diary.getId(),
+                        diary.getDate().toLocalDate(),
+                        diary.getImage() != null ? diary.getImage().getUrl() : null,
+                        diary.getEmotion().getName()
+                ))
+                .toList();
+    }
+
 
 }

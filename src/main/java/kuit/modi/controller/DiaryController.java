@@ -3,6 +3,7 @@ package kuit.modi.controller;
 import kuit.modi.domain.Member;
 import kuit.modi.dto.*;
 import kuit.modi.exception.InvalidDateException;
+import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.service.DiaryQueryService;
 import kuit.modi.service.DiaryService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/diaries")
@@ -72,7 +74,7 @@ public class DiaryController {
     }
 
     //일기 날짜 기반 조회 (메인 + 이전/다음)
-    @GetMapping
+    @GetMapping(params = "date")
     public ResponseEntity<DailyDiaryDetailResponse> getDailyDiaryDetail(
             @AuthenticationPrincipal Member member,
             @RequestParam String date
@@ -87,6 +89,23 @@ public class DiaryController {
         DailyDiaryDetailResponse response = diaryQueryService.getDailyDetail(parsedDate, member);
         return ResponseEntity.ok(response);
     }
+
+    // 특정 연/월의 일기 목록 조회 (월별 보기)
+    @GetMapping(params = {"year", "month"})
+    public ResponseEntity<List<DiaryMonthlyItemDto>> getMonthlyDiaries(
+            @AuthenticationPrincipal Member member,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month
+    ) {
+        if (year != null && month != null) {
+            List<DiaryMonthlyItemDto> diaries = diaryQueryService.getMonthlyDiaries(year, month, member);
+            return ResponseEntity.ok(diaries);
+        }
+
+        // 다른 GET 쿼리(예: ?date=2025-07-17)와 구분이 필요하다면 여기에 분기 추가
+        throw new InvalidYearMonthException(); // 예시
+    }
+
 
 }
 
