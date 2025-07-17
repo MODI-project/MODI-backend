@@ -1,9 +1,12 @@
 package kuit.modi.controller;
 
+import kuit.modi.domain.Member;
 import kuit.modi.dto.*;
+import kuit.modi.service.DiaryQueryService;
 import kuit.modi.service.DiaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class DiaryController {
 
     private final DiaryService diaryService;
+    private final DiaryQueryService diaryQueryService;
 
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> createDiary(
@@ -52,5 +56,18 @@ public class DiaryController {
         diaryService.deleteDiary(diaryId);
         return ResponseEntity.ok(new DiaryDeleteResponse("기록 삭제가 완료되었습니다."));
     }
+
+    //일기 상세 조회
+    @GetMapping("/{diaryId}")
+    public ResponseEntity<DiaryDetailResponse> getDiaryDetail(
+            @AuthenticationPrincipal Member member,
+            @PathVariable Long diaryId
+    ) {
+        DiaryDetailResponse response = diaryQueryService.getDiaryDetail(diaryId, member);
+        return ResponseEntity.ok(response);
+    }
+
 }
+
+
 
