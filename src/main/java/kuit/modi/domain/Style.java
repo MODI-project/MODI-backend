@@ -25,4 +25,17 @@ public class Style {
     @ManyToOne
     @JoinColumn(name = "frame_id", nullable = false)
     private Frame frame;
+
+    public static Style create(
+            String font,
+            Diary diary,
+            Frame frame
+    ){
+        Style style = new Style();
+        style.setFont(font);
+        style.setDiary(diary);
+        style.setFrame(frame);
+
+        return style;
+    }
 }
