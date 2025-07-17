@@ -20,14 +20,18 @@ public class Diary {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 200)  // 요약 원본
     private String summary;
+
+    // 언어스타일 적용된 요약, 이 값은 nullable함.(언어스타일 적용 안 할 수도 있기 때문)
+    @Column(name = "summary_toned", length = 200)
+    private String summary_toned;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(nullable = false)
-    private LocalDate date;
+    private LocalDateTime date;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -73,7 +77,8 @@ public class Diary {
     public static Diary create(
             String content,
             String summary,
-            LocalDate date,
+            String summary_toned,
+            LocalDateTime date,
             Member member,
             Emotion emotion,
             Tone tone,
@@ -84,6 +89,7 @@ public class Diary {
         Diary diary = new Diary();
         diary.setContent(content);
         diary.setSummary(summary);
+        diary.setSummary_toned(summary_toned);
         diary.setDate(date);
         diary.setMember(member);
         diary.setEmotion(emotion);

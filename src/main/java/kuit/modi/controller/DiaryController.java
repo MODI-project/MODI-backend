@@ -43,7 +43,7 @@ public class DiaryController {
 
         diaryService.updateFavorite(diaryId, favorite);
         return ResponseEntity.ok(
-                new FavoriteUpdateResponse("즐겨찾기 " + (favorite ? "등록" : "해제") + "가 완료되었습니다.")
+                new FavoriteUpdateResponse("즐겨찾기 " + (favorite ? "등록" : "해제") + " 완료되었습니다.")
         );
     }
 

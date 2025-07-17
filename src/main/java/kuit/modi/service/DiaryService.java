@@ -30,7 +30,7 @@ public class DiaryService {
     private final DiaryTagRepository diaryTagRepository;
 
     public void createDiary(CreateDiaryRequest request, MultipartFile imageFile) {
-        LocalDate parsedDate = LocalDate.parse(request.date(), DateTimeFormatter.ISO_DATE);
+        LocalDateTime parsedDate = LocalDateTime.parse(request.date());
         LocalDateTime now = LocalDateTime.now();
 
         Emotion emotion = emotionRepository.findByName(request.emotion())
@@ -51,6 +51,7 @@ public class DiaryService {
         Diary diary = Diary.create(
                 request.content(),
                 request.summary(),
+                null,
                 parsedDate,
                 member,
                 emotion,
@@ -91,7 +92,8 @@ public class DiaryService {
 
         diary.setContent(request.content());
         diary.setSummary(request.summary());
-        diary.setDate(LocalDate.parse(request.date()));
+        diary.setSummary_toned(null); // Todo 언어스타일 적용된 요약본은 지금은 null로 넣어놨어요!
+        diary.setDate(LocalDateTime.parse(request.date()));
         diary.setUpdatedAt(LocalDateTime.now());
 
         diary.setEmotion(emotionRepository.findByName(request.emotion())
