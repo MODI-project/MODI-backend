@@ -145,6 +145,19 @@ public class DiaryQueryRepository {
                 .getSingleResult();
     }
 
+    //특정 태그에 해당하는 사용자의 일기 조회- 작성일 기준 오름차순
+    public List<Object[]> findByTagIdWithImage(Long memberId, Long tagId) {
+        return em.createQuery(
+                        "SELECT d.date, i.url FROM Diary d " +
+                                "JOIN d.image i " +
+                                "JOIN d.diaryTags dt " +
+                                "WHERE d.member.id = :memberId " +
+                                "AND dt.tag.id = :tagId " +
+                                "ORDER BY d.date ASC, d.createdAt ASC", Object[].class)
+                .setParameter("memberId", memberId)
+                .setParameter("tagId", tagId)
+                .getResultList();
+    }
 
 
 }
