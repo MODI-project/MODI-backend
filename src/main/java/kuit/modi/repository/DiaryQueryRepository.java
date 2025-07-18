@@ -74,4 +74,18 @@ public class DiaryQueryRepository {
                 .getResultList();
     }
 
+    //즐겨찾기한 일기 목록 조회 - 로그인한 사용자의 favorite=true 조건
+    public List<Diary> findFavorites(Long memberId) {
+        return em.createQuery(
+                        "SELECT d FROM Diary d " +
+                                "LEFT JOIN FETCH d.image " +
+                                "WHERE d.member.id = :memberId " +
+                                "AND d.favorite = true " +
+                                "ORDER BY d.createdAt DESC", Diary.class
+                )
+                .setParameter("memberId", memberId)
+                .getResultList();
+    }
+
+
 }

@@ -106,6 +106,16 @@ public class DiaryController {
         throw new InvalidYearMonthException(); // 예시
     }
 
+    // 즐겨찾기한 일기 목록 조회
+    @GetMapping("/favorites")
+    public ResponseEntity<List<FavoriteDiaryItemDto>> getFavoriteDiaries(
+            @AuthenticationPrincipal Member member
+    ) {
+        List<FavoriteDiaryItemDto> favorites = diaryQueryService.getFavoriteDiaries(member);
+        return ResponseEntity.ok(favorites);
+    }
+
+
 
 }
 

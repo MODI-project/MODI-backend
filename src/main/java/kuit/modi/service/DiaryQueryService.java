@@ -6,6 +6,7 @@ import kuit.modi.dto.DailyDiaryDetailResponse;
 import kuit.modi.dto.DiaryDetailResponse;
 import kuit.modi.dto.DiaryDetailResponse.*;
 import kuit.modi.dto.DiaryMonthlyItemDto;
+import kuit.modi.dto.FavoriteDiaryItemDto;
 import kuit.modi.exception.DiaryNotFoundException;
 import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.repository.DiaryQueryRepository;
@@ -150,6 +151,21 @@ public class DiaryQueryService {
                 ))
                 .toList();
     }
+
+    //즐겨찾기한 일기 목록 조회
+    @Transactional(readOnly = true)
+    public List<FavoriteDiaryItemDto> getFavoriteDiaries(Member member) {
+        List<Diary> diaries = diaryQueryRepository.findFavorites(member.getId());
+
+        return diaries.stream()
+                .map(diary -> new FavoriteDiaryItemDto(
+                        diary.getId(),
+                        diary.getDate().toLocalDate(),
+                        diary.getImage() != null ? diary.getImage().getUrl() : null
+                ))
+                .toList();
+    }
+
 
 
 }
