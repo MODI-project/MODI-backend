@@ -1,8 +1,11 @@
 package kuit.modi.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
+import kuit.modi.domain.CharacterType;
 import kuit.modi.domain.Member;
 import kuit.modi.dto.GoogleUserInfo;
+import kuit.modi.exception.NotFoundException;
+import kuit.modi.repository.CharacterTypeRepository;
 import kuit.modi.repository.MemberRepository;
 import kuit.modi.service.GoogleOAuthService;
 import kuit.modi.service.JwtService;
@@ -21,6 +24,7 @@ public class OAuthController {
     private final GoogleOAuthService googleOAuthService;
     private final JwtService jwtService;
     private final MemberRepository memberRepository;
+    private final CharacterTypeRepository characterTypeRepository;
 
     @GetMapping("/authorize/google")
     public void redirectToGoogle(HttpServletResponse response) throws IOException {
@@ -41,7 +45,11 @@ public class OAuthController {
         } else {
             // 기존 회원이 아니면 이메일만으로 임시 회원 생성
             isNew = true;
-            member = memberRepository.save(new Member(userInfo.email()));
+            CharacterType momo = characterTypeRepository.findByName("Momo")
+                    .orElseThrow(() -> new NotFoundException("캐릭터 타입 'Momo'가 존재하지 않습니다"));
+
+            Member newMember = new Member(userInfo.email(), momo);
+            member = memberRepository.save(newMember);
         }
 
         // jwt를 생성해서 쿠키에 포함하여 전달
