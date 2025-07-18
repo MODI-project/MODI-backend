@@ -10,8 +10,12 @@ import kuit.modi.repository.DiaryQueryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 //일기 조회 전용 서비스
 @Service
@@ -201,5 +205,25 @@ public class DiaryQueryService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public List<DiaryTagSearchItemDto> getDiariesByTag(Long tagId, Member member) {
+        Long memberId = member.getId();
+
+        // (날짜, 이미지 URL) 튜플 리스트
+        List<Object[]> rawResults = diaryQueryRepository.findByTagIdWithImage(memberId, tagId);
+
+        // 날짜 기준 그룹
+        Map<LocalDate, List<String>> grouped = rawResults.stream()
+                .collect(Collectors.groupingBy(
+                        obj -> ((LocalDateTime) obj[0]).toLocalDate(),
+                        TreeMap::new, // 정렬된 Map 유지
+                        Collectors.mapping(obj -> (String) obj[1], Collectors.toList())
+                ));
+
+        // 그룹된 데이터 DTO로 변환
+        return grouped.entrySet().stream()
+                .map(entry -> new DiaryTagSearchItemDto(entry.getKey(), entry.getValue()))
+                .toList();
+    }
 
 }

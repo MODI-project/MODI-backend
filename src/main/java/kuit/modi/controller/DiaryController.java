@@ -126,6 +126,15 @@ public class DiaryController {
         return ResponseEntity.ok(response);
     }
 
+    // 특정 태그 기반으로 일기 검색 (날짜별 이미지 리스트)
+    @GetMapping(params = "tagId")
+    public ResponseEntity<List<DiaryTagSearchItemDto>> getDiariesByTag(
+            @AuthenticationPrincipal Member member,
+            @RequestParam Long tagId
+    ) {
+        List<DiaryTagSearchItemDto> results = diaryQueryService.getDiariesByTag(tagId, member);
+        return ResponseEntity.ok(results);
+    }
 
 }
 
