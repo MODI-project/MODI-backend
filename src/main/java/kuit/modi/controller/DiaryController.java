@@ -115,6 +115,16 @@ public class DiaryController {
         return ResponseEntity.ok(favorites);
     }
 
+    // 월간 통계 조회 API
+    @GetMapping("/statistics")
+    public ResponseEntity<DiaryStatisticsResponse> getMonthlyStatistics(
+            @AuthenticationPrincipal Member member,
+            @RequestParam int year,
+            @RequestParam int month
+    ) {
+        DiaryStatisticsResponse response = diaryQueryService.getMonthlyStatistics(year, month, member);
+        return ResponseEntity.ok(response);
+    }
 
 
 }

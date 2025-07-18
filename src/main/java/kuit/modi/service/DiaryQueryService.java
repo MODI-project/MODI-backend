@@ -2,11 +2,8 @@
 package kuit.modi.service;
 
 import kuit.modi.domain.*;
-import kuit.modi.dto.DailyDiaryDetailResponse;
-import kuit.modi.dto.DiaryDetailResponse;
+import kuit.modi.dto.*;
 import kuit.modi.dto.DiaryDetailResponse.*;
-import kuit.modi.dto.DiaryMonthlyItemDto;
-import kuit.modi.dto.FavoriteDiaryItemDto;
 import kuit.modi.exception.DiaryNotFoundException;
 import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.repository.DiaryQueryRepository;
@@ -166,6 +163,43 @@ public class DiaryQueryService {
                 .toList();
     }
 
+    // Object[] -> RankItem으로 변환 (상위 4개만)
+    private List<DiaryStatisticsResponse.RankItem> mapStats(List<Object[]> rawStats) {
+        return rawStats.stream()
+                .limit(4)
+                .map(obj -> new DiaryStatisticsResponse.RankItem(
+                        (String) obj[0],
+                        ((Long) obj[1]).intValue()
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public DiaryStatisticsResponse getMonthlyStatistics(int year, int month, Member member) {
+        Long memberId = member.getId();
+
+        // 전체 일기 수
+        int totalCount = (int) diaryQueryRepository.countMonthlyDiaries(memberId, year, month);
+
+        // 감정 통계
+        List<DiaryStatisticsResponse.RankItem> topEmotions =
+                mapStats(diaryQueryRepository.findEmotionStats(memberId, year, month));
+
+        // 어투 통계
+        List<DiaryStatisticsResponse.RankItem> topTones =
+                mapStats(diaryQueryRepository.findToneStats(memberId, year, month));
+
+        // 위치 통계
+        List<DiaryStatisticsResponse.RankItem> topLocations =
+                mapStats(diaryQueryRepository.findLocationStats(memberId, year, month));
+
+        return new DiaryStatisticsResponse(
+                totalCount,
+                topEmotions,
+                topTones,
+                topLocations
+        );
+    }
 
 
 }

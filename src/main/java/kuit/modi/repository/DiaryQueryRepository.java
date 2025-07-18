@@ -87,5 +87,64 @@ public class DiaryQueryRepository {
                 .getResultList();
     }
 
+    //감정별 통계 조
+    public List<Object[]> findEmotionStats(Long memberId, int year, int month) {
+        return em.createQuery(
+                        "SELECT e.name, COUNT(d) FROM Diary d " +
+                                "JOIN d.emotion e " +
+                                "WHERE d.member.id = :memberId " +
+                                "AND YEAR(d.date) = :year AND MONTH(d.date) = :month " +
+                                "GROUP BY e.name ORDER BY COUNT(d) DESC", Object[].class
+                )
+                .setParameter("memberId", memberId)
+                .setParameter("year", year)
+                .setParameter("month", month)
+                .getResultList();
+    }
+
+   //어투별 통계 조회
+    public List<Object[]> findToneStats(Long memberId, int year, int month) {
+        return em.createQuery(
+                        "SELECT t.name, COUNT(d) FROM Diary d " +
+                                "JOIN d.tone t " +
+                                "WHERE d.member.id = :memberId " +
+                                "AND YEAR(d.date) = :year AND MONTH(d.date) = :month " +
+                                "GROUP BY t.name ORDER BY COUNT(d) DESC", Object[].class
+                )
+                .setParameter("memberId", memberId)
+                .setParameter("year", year)
+                .setParameter("month", month)
+                .getResultList();
+    }
+
+    //위치별 통계 조회
+    public List<Object[]> findLocationStats(Long memberId, int year, int month) {
+        return em.createQuery(
+                        "SELECT l.address, COUNT(d) FROM Diary d " +
+                                "JOIN d.location l " +
+                                "WHERE d.member.id = :memberId " +
+                                "AND YEAR(d.date) = :year AND MONTH(d.date) = :month " +
+                                "GROUP BY l.address ORDER BY COUNT(d) DESC", Object[].class
+                )
+                .setParameter("memberId", memberId)
+                .setParameter("year", year)
+                .setParameter("month", month)
+                .getResultList();
+    }
+
+    //전체 일기 수 카운트
+    public long countMonthlyDiaries(Long memberId, int year, int month) {
+        return em.createQuery(
+                        "SELECT COUNT(d) FROM Diary d " +
+                                "WHERE d.member.id = :memberId " +
+                                "AND YEAR(d.date) = :year AND MONTH(d.date) = :month", Long.class
+                )
+                .setParameter("memberId", memberId)
+                .setParameter("year", year)
+                .setParameter("month", month)
+                .getSingleResult();
+    }
+
+
 
 }
