@@ -21,4 +21,15 @@ public class Image {
     @OneToOne
     @JoinColumn(name = "diary_id", unique = true, nullable = false)
     private Diary diary;
+
+    public static Image create(
+            String url,
+            Diary diary
+    ){
+        Image image = new Image();
+        image.setUrl(url);
+        image.setDiary(diary);
+
+        return image;
+    }
 }

@@ -33,8 +33,10 @@ public class Member {
     @JoinColumn(name = "character_type_id")
     private CharacterType characterType;
 
-    public Member(String email) {
+    public Member(String email, CharacterType characterType) {
         this.email = email;
+        this.characterType = characterType; // Todo 추가함
+        this.nickname = "tempUser"; // Todo 추가함
     }
 
     @PrePersist
