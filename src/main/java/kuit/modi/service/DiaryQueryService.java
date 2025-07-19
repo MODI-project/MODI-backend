@@ -7,7 +7,9 @@ import kuit.modi.dto.DiaryDetailResponse.*;
 import kuit.modi.exception.DiaryNotFoundException;
 import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.repository.DiaryQueryRepository;
+import kuit.modi.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -16,13 +18,14 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-//일기 조회 전용 서비스
+
+//일기 조회 전용 서비스:wq
 @Service
 @RequiredArgsConstructor
 public class DiaryQueryService {
 
     private final DiaryQueryRepository diaryQueryRepository;
+    private final TagRepository tagRepository;
 
     /*
      * diaryId에 해당하는 일기를 상세 조회합니다.
@@ -60,10 +63,8 @@ public class DiaryQueryService {
                 : List.of();
 
         String font = diary.getStyle() == null ? null : diary.getStyle().getFont();
-        String frame = (diary.getStyle() == null || diary.getStyle().getFrame() == null)
-                ? null : diary.getStyle().getFrame().getName();
-
-
+        Long frameId = (diary.getStyle() == null || diary.getStyle().getFrame() == null)
+                ? null : diary.getStyle().getFrame().getId();
 
         return new DiaryDetailResponse(
                 diary.getId(),
@@ -75,7 +76,7 @@ public class DiaryQueryService {
                 tags,
                 locationDto,
                 font,
-                frame,
+                frameId,
                 imageUrls,
                 diary.isFavorite(),
                 diary.getCreatedAt(),
@@ -116,21 +117,32 @@ public class DiaryQueryService {
                 .limit(3)
                 .toList();
 
+        Long frameId = (diary.getStyle() != null && diary.getStyle().getFrame() != null)
+                ? diary.getStyle().getFrame().getId()
+                : null;
+
         return new DailyDiaryDetailResponse.MainDiaryDto(
                 diary.getId(),
                 diary.getSummary(),
                 diary.getCreatedAt(),
                 diary.getImage() != null ? diary.getImage().getUrl() : null,
-                tags
+                tags,
+                frameId
         );
     }
 
+    // 메인 화면 좌/우 일기 변환
     private DailyDiaryDetailResponse.AdjacentDiaryDto toAdjacentDto(Diary diary) {
+        Long frameId = (diary.getStyle() != null && diary.getStyle().getFrame() != null)
+                ? diary.getStyle().getFrame().getId()
+                : null;
+
         return new DailyDiaryDetailResponse.AdjacentDiaryDto(
                 diary.getId(),
                 diary.getSummary(),
                 diary.getCreatedAt(),
-                diary.getImage() != null ? diary.getImage().getUrl() : null
+                diary.getImage() != null ? diary.getImage().getUrl() : null,
+                frameId
         );
     }
 
@@ -225,5 +237,10 @@ public class DiaryQueryService {
                 .map(entry -> new DiaryTagSearchItemDto(entry.getKey(), entry.getValue()))
                 .toList();
     }
+
+    public List<String> getPopularTags() {
+        return tagRepository.findTopTagNames(PageRequest.of(0, 10));
+    }
+
 
 }

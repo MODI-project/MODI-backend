@@ -136,6 +136,13 @@ public class DiaryController {
         return ResponseEntity.ok(results);
     }
 
+    @GetMapping("/tags/popular")
+    public ResponseEntity<List<String>> getPopularTags() {
+        List<String> tags = diaryQueryService.getPopularTags();
+        return ResponseEntity.ok(tags);
+    }
+
+
 }
 
 
