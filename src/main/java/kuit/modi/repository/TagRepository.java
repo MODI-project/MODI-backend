@@ -10,14 +10,13 @@ import java.util.Optional;
 
 public interface TagRepository extends JpaRepository<Tag, Long> {
     Optional<Tag> findByName(String name);
-    List<Tag> findAllByNameIn(List<String> names);
 
     @Query("""
-    SELECT t.name 
-    FROM DiaryTag dt 
-    JOIN dt.tag t 
-    GROUP BY t.name 
-    ORDER BY COUNT(t.name) DESC 
+    SELECT t.name
+    FROM DiaryTag dt
+    JOIN dt.tag t
+    GROUP BY t.name
+    ORDER BY COUNT(t.name) DESC
     """)
     List<String> findTopTagNames(Pageable pageable);
 
