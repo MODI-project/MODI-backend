@@ -22,7 +22,7 @@ public class DiaryDetailResponse {
     private List<TagDto> tags;
     private LocationDto location;
     private String font;
-    private String frame;
+    private Long frameId;
     private List<String> imageUrls;
     private boolean favorites;
     private LocalDateTime createdAt;

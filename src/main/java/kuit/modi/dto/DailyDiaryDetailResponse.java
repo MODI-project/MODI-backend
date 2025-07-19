@@ -24,6 +24,7 @@ public class DailyDiaryDetailResponse {
         private LocalDateTime datetime;
         private String thumbnailUrl;
         private List<String> tags;
+        private Long frameId;
     }
 
     // 좌우 일기 요약 정보
@@ -34,5 +35,6 @@ public class DailyDiaryDetailResponse {
         private String summary;
         private LocalDateTime datetime;
         private String thumbnailUrl;
+        private Long frameId;
     }
 }
