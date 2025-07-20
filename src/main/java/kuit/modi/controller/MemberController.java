@@ -1,8 +1,8 @@
 package kuit.modi.controller;
 
 import kuit.modi.domain.Member;
-import kuit.modi.dto.UserRequest;
-import kuit.modi.dto.UserResponse;
+import kuit.modi.dto.MemberRequest;
+import kuit.modi.dto.MemberResponse;
 import kuit.modi.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,25 +17,25 @@ public class MemberController {
     private final MemberService memberService;
 
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(
+    public ResponseEntity<MemberResponse> createUser(
             @AuthenticationPrincipal Member member,
-            @RequestBody UserRequest userRequest) {
+            @RequestBody MemberRequest memberRequest) {
 
-        Member updated = memberService.completeSignup(member.getId(), userRequest);
+        Member updated = memberService.completeSignup(member.getId(), memberRequest);
 
-        UserResponse response = new UserResponse(
+        MemberResponse response = new MemberResponse(
                 updated.getId(),
                 updated.getEmail(),
                 updated.getNickname(),
-                updated.getCharacterType().getId()
+                updated.getCharacterType().getName()
         );
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> getUserInfo(@AuthenticationPrincipal Member member) {
-        UserResponse response = new UserResponse(member.getId(), member.getEmail(), member.getNickname(), member.getCharacterType().getId());
+    public ResponseEntity<MemberResponse> getUserInfo(@AuthenticationPrincipal Member member) {
+        MemberResponse response = new MemberResponse(member.getId(), member.getEmail(), member.getNickname(), member.getCharacterType().getName());
         return ResponseEntity.ok(response);
     }
 }
