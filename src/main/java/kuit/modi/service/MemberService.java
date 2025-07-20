@@ -2,8 +2,7 @@ package kuit.modi.service;
 
 import kuit.modi.domain.CharacterType;
 import kuit.modi.domain.Member;
-import kuit.modi.dto.UserRequest;
-import kuit.modi.dto.UserResponse;
+import kuit.modi.dto.MemberRequest;
 import kuit.modi.repository.CharacterTypeRepository;
 import kuit.modi.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +16,11 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final CharacterTypeRepository characterTypeRepository;
 
-    public Member completeSignup(Long memberId, UserRequest request) {
+    public Member completeSignup(Long memberId, MemberRequest request) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        CharacterType characterType = characterTypeRepository.findById(request.getCharacterId())
+        CharacterType characterType = characterTypeRepository.findByName(request.getCharacter())
                 .orElseThrow(() -> new IllegalArgumentException("잘못된 캐릭터 유형입니다."));
 
         member.setNickname(request.getNickname());
