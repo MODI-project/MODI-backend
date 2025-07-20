@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRequest {
+public class MemberRequest {
     private String nickname;
-    private Long characterId;
+    private String character;
 }
