@@ -65,9 +65,11 @@ public class OAuthController {
 
         response.addHeader("Set-Cookie", cookie.toString());
 
-        // 프론트엔드로 리디렉션, isNew 여부 전달
-        //String redirectUrl = "https://your-frontend.com/oauth/callback?isNew=" + isNew ;
-        String redirectUrl = "localhost:8080/oauth2/authorize/google";
-        //response.sendRedirect(redirectUrl);
+        // 프론트엔드로 리디렉션 - 현재는 localhost로 설정, 추후 수정 필요
+        String redirectUrl = "http://localhost:5173/home";
+        if(isNew)
+            redirectUrl = "http://localhost:5173/test-initialsetting";
+
+        response.sendRedirect(redirectUrl);
     }
 }
