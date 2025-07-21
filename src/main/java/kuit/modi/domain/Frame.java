@@ -17,7 +17,4 @@ public class Frame {
 
     @Column(nullable = false, unique = true, length = 30)
     private String name;
-
-    @Column(name = "style_info", columnDefinition = "TEXT")
-    private String styleInfo; // 프레임 스타일 관련 JSON 등 저장 가능
 }
