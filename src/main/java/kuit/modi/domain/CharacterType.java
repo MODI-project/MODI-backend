@@ -17,7 +17,4 @@ public class CharacterType {
 
     @Column(nullable = false, unique = true, length = 30)
     private String name;
-
-    @Column(name = "image_url", columnDefinition = "TEXT")
-    private String imageUrl; // 사용할지 여부는 나중에 결정
 }
