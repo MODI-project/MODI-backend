@@ -21,4 +21,15 @@ public class DiaryTag {
     @ManyToOne
     @JoinColumn(name = "tag_id", nullable = false)
     private Tag tag;
+
+    public static DiaryTag create(
+            Diary diary,
+            Tag tag
+    ){
+        DiaryTag diaryTag = new DiaryTag();
+        diaryTag.setDiary(diary);
+        diaryTag.setTag(tag);
+
+        return diaryTag;
+    }
 }

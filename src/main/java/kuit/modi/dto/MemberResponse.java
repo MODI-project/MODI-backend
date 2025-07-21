@@ -6,9 +6,9 @@ import lombok.Setter;
 
 @Getter @Setter
 @AllArgsConstructor
-public class UserResponse {
+public class MemberResponse {
     private Long userId;
     private String email;
     private String nickname;
-    private Long characterId;
+    private String character;
 }

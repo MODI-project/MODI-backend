@@ -23,4 +23,12 @@ public class Location {
 
     @Column(nullable = false)
     private Double longitude;
+
+    public static Location create(String address, double latitude, double longitude) {
+        Location location = new Location();
+        location.setAddress(address);
+        location.setLatitude(latitude);
+        location.setLongitude(longitude);
+        return location;
+    }
 }
