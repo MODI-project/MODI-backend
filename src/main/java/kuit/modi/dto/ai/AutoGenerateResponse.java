@@ -2,11 +2,10 @@ package kuit.modi.dto.ai;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Getter
-@NoArgsConstructor
+@Getter @Setter
 @AllArgsConstructor
-public class SummaryRequest {
+public class AutoGenerateResponse {
     private String content;
 }
