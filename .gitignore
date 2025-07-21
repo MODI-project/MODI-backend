@@ -41,3 +41,6 @@ out/
 
 ### application-secret.yml ###
 application-secret.yml
+
+### data.sql ###
+data.sql

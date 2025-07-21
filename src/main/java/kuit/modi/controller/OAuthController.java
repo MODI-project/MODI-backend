@@ -34,6 +34,7 @@ public class OAuthController {
 
     @GetMapping("/callback/google")
     public void handleGoogleCallback(@RequestParam String code, HttpServletResponse response) throws IOException {
+        System.out.println("/callback/google 요청 받음");
         String accessToken = googleOAuthService.getAccessToken(code);
         GoogleUserInfo userInfo = googleOAuthService.getUserInfo(accessToken);
         Optional<Member> existingMemberOpt = memberRepository.findByEmail(userInfo.email());
@@ -57,9 +58,9 @@ public class OAuthController {
         System.out.println(jwt);
         ResponseCookie cookie = ResponseCookie.from("access_token", jwt)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .path("/")
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .maxAge(Duration.ofHours(1))
                 .build();
 
