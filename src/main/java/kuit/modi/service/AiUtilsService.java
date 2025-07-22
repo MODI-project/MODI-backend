@@ -23,12 +23,12 @@ public class AiUtilsService {
     }
 
     public String summarizeDiary(SummaryRequest request) {
-        String prompt = "다음 일기를 40자 이내로 요약해줘:\n" + request.getContent();
+        String prompt = "다음 일기를 '~다.'와 같은 말투로 40자 이내로 요약해줘:\n" + request.getContent();
         return openAiClient.ask(prompt);
     }
 
     public List<String> extractLanguageStyle(LanguageStyleRequest request) {
-        String prompt = "다음 일기에 어울리는 감정 스타일을 3~4개 뽑아줘:\n" + request.getSummary();
+        String prompt = "다음 일기 요약에 적절한 언어 스타일(예: 기쁨, 즐거움, 슬픔 등)을 적용하여 다시 쓰려고 해. 어울리는 언어 스타일을 3~4개 뽑아줘:\n" + request.getSummary();
         String response = openAiClient.ask(prompt);
 
         return Arrays.stream(response.split("\\r?\\n"))
