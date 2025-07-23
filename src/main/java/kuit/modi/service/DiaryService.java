@@ -64,11 +64,11 @@ public class DiaryService {
         Style style = Style.create(request.font(), diary, frame);
         diary.setStyle(style);
 
-        if (imageFile != null && !imageFile.isEmpty()) {
-            String storedName = imageFile.getOriginalFilename();
-            Image image = Image.create(storedName, diary);
-            diary.setImage(image);
-        }
+//        if (imageFile != null && !imageFile.isEmpty()) { //Todo 테스트 끝나면 삭제하기
+//            String storedName = imageFile.getOriginalFilename();
+//            Image image = Image.create(storedName, diary);
+//            diary.setImage(image);
+//        }
 
         if (imageFile != null && !imageFile.isEmpty()) {
             String imageUrl = s3Service.uploadFile(imageFile);
@@ -133,12 +133,20 @@ public class DiaryService {
         diary.getDiaryTags().addAll(newDiaryTags);
 
 
+//        if (imageFile != null && !imageFile.isEmpty()) { // Todo 테스트 끝나면 삭제하기
+//            String storedName = imageFile.getOriginalFilename();
+//            if (!storedName.equals(diary.getImage().getUrl())){
+//                Image newImage = Image.create(storedName, diary);
+//                diary.setImage(newImage);
+//            }
+//        }
+
         if (imageFile != null && !imageFile.isEmpty()) {
-            String storedName = imageFile.getOriginalFilename();
-            if (!storedName.equals(diary.getImage().getUrl())){
-                Image newImage = Image.create(storedName, diary);
-                diary.setImage(newImage);
+            if (diary.getImage() != null) {
+                s3Service.deleteFileFromUrl(diary.getImage().getUrl()); // 기존 이미지 삭제
             }
+            String newUrl = s3Service.uploadFile(imageFile);
+            diary.setImage(Image.create(newUrl, diary)); // 새 이미지로 교체
         }
 
         if (request.frameId() != null) {
