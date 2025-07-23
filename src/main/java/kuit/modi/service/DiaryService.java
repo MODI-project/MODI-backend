@@ -10,9 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +26,7 @@ public class DiaryService {
     private final FrameRepository frameRepository;
     private final TagRepository tagRepository;
     private final DiaryTagRepository diaryTagRepository;
+    private final S3Service s3Service;
 
     public void createDiary(CreateDiaryRequest request, MultipartFile imageFile) {
         LocalDateTime parsedDate = LocalDateTime.parse(request.date());
@@ -68,6 +67,12 @@ public class DiaryService {
         if (imageFile != null && !imageFile.isEmpty()) {
             String storedName = imageFile.getOriginalFilename();
             Image image = Image.create(storedName, diary);
+            diary.setImage(image);
+        }
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String imageUrl = s3Service.uploadFile(imageFile);
+            Image image = Image.create(imageUrl, diary); // S3 URL 저장
             diary.setImage(image);
         }
 

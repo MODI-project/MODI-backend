@@ -31,7 +31,7 @@ public class S3Service {
         try {
             amazonS3.putObject(new PutObjectRequest(bucketName, uniqueFilename, file.getInputStream(), metadata));
         } catch (IOException e) {
-            throw new RuntimeException("파일 업로드 실패", e);
+            throw new RuntimeException("이미지 파일 업로드 실패", e);
         }
 
         return getFileUrl(uniqueFilename);
