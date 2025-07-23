@@ -2,7 +2,7 @@ package kuit.modi.service;
 
 import kuit.modi.domain.CharacterType;
 import kuit.modi.domain.Member;
-import kuit.modi.dto.MemberRequest;
+import kuit.modi.dto.member.MemberRequest;
 import kuit.modi.repository.CharacterTypeRepository;
 import kuit.modi.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;

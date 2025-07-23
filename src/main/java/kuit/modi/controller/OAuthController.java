@@ -3,7 +3,7 @@ package kuit.modi.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import kuit.modi.domain.CharacterType;
 import kuit.modi.domain.Member;
-import kuit.modi.dto.GoogleUserInfo;
+import kuit.modi.dto.member.GoogleUserInfo;
 import kuit.modi.exception.NotFoundException;
 import kuit.modi.repository.CharacterTypeRepository;
 import kuit.modi.repository.MemberRepository;

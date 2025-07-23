@@ -1,8 +1,8 @@
 package kuit.modi.controller;
 
 import kuit.modi.domain.Member;
-import kuit.modi.dto.MemberRequest;
-import kuit.modi.dto.MemberResponse;
+import kuit.modi.dto.member.MemberRequest;
+import kuit.modi.dto.member.MemberResponse;
 import kuit.modi.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
