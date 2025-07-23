@@ -13,6 +13,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class S3Service {
+    // Todo 파일 조회 기능 추가하기
 
     private final AmazonS3 amazonS3;
 
@@ -42,8 +43,13 @@ public class S3Service {
         return amazonS3.getUrl(bucketName, fileName).toString();
     }
 
-    // 파일 삭제
-    public void deleteFile(String fileName) {
+    public void deleteFileFromUrl(String url) {
+        String fileName = extractFileNameFromUrl(url);
         amazonS3.deleteObject(bucketName, fileName);
     }
+
+    private String extractFileNameFromUrl(String url) {
+        return url.substring(url.lastIndexOf("/") + 1);
+    }
+
 }
