@@ -27,6 +27,7 @@ public class DiaryService {
     private final TagRepository tagRepository;
     private final DiaryTagRepository diaryTagRepository;
     private final S3Service s3Service;
+    private final ImageRepository imageRepository;
 
     public void createDiary(CreateDiaryRequest request, MultipartFile imageFile) {
         LocalDateTime parsedDate = LocalDateTime.parse(request.date());
@@ -63,12 +64,6 @@ public class DiaryService {
         // Style 생성 (Frame은 엔티티로 전달)
         Style style = Style.create(request.font(), diary, frame);
         diary.setStyle(style);
-
-//        if (imageFile != null && !imageFile.isEmpty()) { //Todo 테스트 끝나면 삭제하기
-//            String storedName = imageFile.getOriginalFilename();
-//            Image image = Image.create(storedName, diary);
-//            diary.setImage(image);
-//        }
 
         if (imageFile != null && !imageFile.isEmpty()) {
             String imageUrl = s3Service.uploadFile(imageFile);
@@ -132,23 +127,19 @@ public class DiaryService {
 
         diary.getDiaryTags().addAll(newDiaryTags);
 
-
-//        if (imageFile != null && !imageFile.isEmpty()) { // Todo 테스트 끝나면 삭제하기
-//            String storedName = imageFile.getOriginalFilename();
-//            if (!storedName.equals(diary.getImage().getUrl())){
-//                Image newImage = Image.create(storedName, diary);
-//                diary.setImage(newImage);
-//            }
-//        }
-
         if (imageFile != null && !imageFile.isEmpty()) {
-            if (diary.getImage() != null) {
-                s3Service.deleteFileFromUrl(diary.getImage().getUrl()); // 기존 이미지 삭제
-            }
-            String newUrl = s3Service.uploadFile(imageFile);
-            diary.setImage(Image.create(newUrl, diary)); // 새 이미지로 교체
-        }
+            String newUrl = s3Service.uploadFile(imageFile); // S3에 새 이미지 등록
 
+            if (diary.getImage() != null) {
+                String oldUrl = diary.getImage().getUrl();  // 기존 URL 먼저 보관
+                s3Service.deleteFileFromUrl(oldUrl);        // S3에서 기존 이미지 삭제
+                diary.getImage().setUrl(newUrl);            // 기존 image의 url 필드만 변경
+            } else {
+                Image newImage = Image.create(newUrl, diary);
+                diary.setImage(newImage);
+            }
+        }
+        
         if (request.frameId() != null) {
             Frame frame = frameRepository.findById(request.frameId())
                     .orElseThrow(() -> new IllegalArgumentException("프레임 정보가 유효하지 않습니다."));
@@ -172,6 +163,14 @@ public class DiaryService {
         Diary diary = diaryRepository.findById(diaryId)
                 .orElseThrow(() -> new NotFoundException("해당 기록을 찾을 수 없습니다."));
 
+        // S3에서 이미지 먼저 삭제
+        if (diary.getImage() != null) {
+            String url = diary.getImage().getUrl();
+            s3Service.deleteFileFromUrl(url);
+        }
+
+        // 연관된 Image 엔티티는 cascade로 DB에서 자동 삭제됨
         diaryRepository.delete(diary);
     }
+
 }
