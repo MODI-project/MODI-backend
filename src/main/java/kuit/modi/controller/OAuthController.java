@@ -3,7 +3,7 @@ package kuit.modi.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import kuit.modi.domain.CharacterType;
 import kuit.modi.domain.Member;
-import kuit.modi.dto.GoogleUserInfo;
+import kuit.modi.dto.member.GoogleUserInfo;
 import kuit.modi.exception.NotFoundException;
 import kuit.modi.repository.CharacterTypeRepository;
 import kuit.modi.repository.MemberRepository;
@@ -55,7 +55,7 @@ public class OAuthController {
 
         // jwt를 생성해서 쿠키에 포함하여 전달
         String jwt = jwtService.createToken(member.getId());
-        System.out.println(jwt);
+        //System.out.println(jwt);
         ResponseCookie cookie = ResponseCookie.from("access_token", jwt)
                 .httpOnly(true)
                 .secure(false)
