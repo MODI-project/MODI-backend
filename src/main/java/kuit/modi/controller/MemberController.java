@@ -1,8 +1,8 @@
 package kuit.modi.controller;
 
 import kuit.modi.domain.Member;
-import kuit.modi.dto.MemberRequest;
-import kuit.modi.dto.MemberResponse;
+import kuit.modi.dto.member.MemberRequest;
+import kuit.modi.dto.member.MemberResponse;
 import kuit.modi.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +16,22 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    @PostMapping
-    public ResponseEntity<MemberResponse> createUser(
+    @GetMapping("/me")
+    public ResponseEntity<MemberResponse> getUserInfo(@AuthenticationPrincipal Member member) {
+        MemberResponse response = new MemberResponse(member.getId(), member.getEmail(), member.getNickname(), member.getCharacterType().getName());
+        return ResponseEntity.ok(response);
+    }
+
+    // 회원가입, 회원정보수정
+    @RequestMapping(
+            path = {"", "/me"},
+            method = {RequestMethod.POST, RequestMethod.PUT}
+    )
+    public ResponseEntity<MemberResponse> updateUser(
             @AuthenticationPrincipal Member member,
             @RequestBody MemberRequest memberRequest) {
 
-        Member updated = memberService.completeSignup(member.getId(), memberRequest);
+        Member updated = memberService.update(member.getId(), memberRequest);
 
         MemberResponse response = new MemberResponse(
                 updated.getId(),
@@ -29,13 +39,12 @@ public class MemberController {
                 updated.getNickname(),
                 updated.getCharacterType().getName()
         );
-
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<MemberResponse> getUserInfo(@AuthenticationPrincipal Member member) {
-        MemberResponse response = new MemberResponse(member.getId(), member.getEmail(), member.getNickname(), member.getCharacterType().getName());
-        return ResponseEntity.ok(response);
+    @DeleteMapping("/me")
+    public ResponseEntity<String> deleteUser(@AuthenticationPrincipal Member member) {
+        memberService.deleteById(member.getId());
+        return ResponseEntity.ok("User successfully deleted.");
     }
 }
