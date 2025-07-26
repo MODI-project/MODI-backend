@@ -1,4 +1,4 @@
-package kuit.modi.dto;
+package kuit.modi.dto.diary.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

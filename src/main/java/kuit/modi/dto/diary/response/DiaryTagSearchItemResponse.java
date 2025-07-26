@@ -1,4 +1,4 @@
-package kuit.modi.dto;
+package kuit.modi.dto.diary.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class DiaryTagSearchItemDto {
+public class DiaryTagSearchItemResponse {
 
     private LocalDate date;
     private List<String> imageUrls;  // 해당 날짜의 이미지 URL 리스트

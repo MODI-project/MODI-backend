@@ -3,12 +3,7 @@ package kuit.modi.controller;
 import kuit.modi.domain.Member;
 import kuit.modi.dto.diary.request.CreateDiaryRequest;
 import kuit.modi.dto.diary.request.UpdateDiaryRequest;
-import kuit.modi.dto.diary.response.DiaryCreateResponse;
-import kuit.modi.dto.diary.response.DiaryDeleteResponse;
-import kuit.modi.dto.diary.response.DiaryUpdateResponse;
-import kuit.modi.dto.diary.response.FavoriteUpdateResponse;
-import kuit.modi.domain.Member;
-import kuit.modi.dto.*;
+import kuit.modi.dto.diary.response.*;
 import kuit.modi.exception.InvalidDateException;
 import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.service.DiaryQueryService;
@@ -100,13 +95,13 @@ public class DiaryController {
 
     // 특정 연/월의 일기 목록 조회 (월별 보기)
     @GetMapping(params = {"year", "month"})
-    public ResponseEntity<List<DiaryMonthlyItemDto>> getMonthlyDiaries(
+    public ResponseEntity<List<DiaryMonthlyItemResponse>> getMonthlyDiaries(
             @AuthenticationPrincipal Member member,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer month
     ) {
         if (year != null && month != null) {
-            List<DiaryMonthlyItemDto> diaries = diaryQueryService.getMonthlyDiaries(year, month, member);
+            List<DiaryMonthlyItemResponse> diaries = diaryQueryService.getMonthlyDiaries(year, month, member);
             return ResponseEntity.ok(diaries);
         }
 
@@ -116,10 +111,10 @@ public class DiaryController {
 
     // 즐겨찾기한 일기 목록 조회
     @GetMapping("/favorites")
-    public ResponseEntity<List<FavoriteDiaryItemDto>> getFavoriteDiaries(
+    public ResponseEntity<List<FavoriteDiaryItemResponse>> getFavoriteDiaries(
             @AuthenticationPrincipal Member member
     ) {
-        List<FavoriteDiaryItemDto> favorites = diaryQueryService.getFavoriteDiaries(member);
+        List<FavoriteDiaryItemResponse> favorites = diaryQueryService.getFavoriteDiaries(member);
         return ResponseEntity.ok(favorites);
     }
 
@@ -136,11 +131,11 @@ public class DiaryController {
 
     // 특정 태그 기반으로 일기 검색 (날짜별 이미지 리스트)
     @GetMapping(params = "tagId")
-    public ResponseEntity<List<DiaryTagSearchItemDto>> getDiariesByTag(
+    public ResponseEntity<List<DiaryTagSearchItemResponse>> getDiariesByTag(
             @AuthenticationPrincipal Member member,
             @RequestParam Long tagId
     ) {
-        List<DiaryTagSearchItemDto> results = diaryQueryService.getDiariesByTag(tagId, member);
+        List<DiaryTagSearchItemResponse> results = diaryQueryService.getDiariesByTag(tagId, member);
         return ResponseEntity.ok(results);
     }
 

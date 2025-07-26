@@ -1,9 +1,9 @@
 
-package kuit.modi.dto;
+package kuit.modi.dto.diary.response;
 
 import java.time.LocalDate;
 
-public record FavoriteDiaryItemDto(
+public record FavoriteDiaryItemResponse(
         Long id,
         LocalDate date,
         String thumbnailUrl
