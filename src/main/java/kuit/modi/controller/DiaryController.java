@@ -1,9 +1,16 @@
 package kuit.modi.controller;
 
-import kuit.modi.dto.*;
+import kuit.modi.domain.Member;
+import kuit.modi.dto.diary.request.CreateDiaryRequest;
+import kuit.modi.dto.diary.request.UpdateDiaryRequest;
+import kuit.modi.dto.diary.response.DiaryCreateResponse;
+import kuit.modi.dto.diary.response.DiaryDeleteResponse;
+import kuit.modi.dto.diary.response.DiaryUpdateResponse;
+import kuit.modi.dto.diary.response.FavoriteUpdateResponse;
 import kuit.modi.service.DiaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.ResponseEntity;
@@ -17,12 +24,21 @@ public class DiaryController {
 
     private final DiaryService diaryService;
 
+//    @PostMapping(consumes = "multipart/form-data")
+//    public ResponseEntity<?> createDiary(
+//            @RequestPart("data") CreateDiaryRequest request,
+//            @RequestPart(value = "image", required = false) MultipartFile image
+//    ) {
+//        diaryService.createDiary(request, image);
+//        return ResponseEntity.ok(new DiaryCreateResponse("기록 생성이 완료되었습니다."));
+//    }
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> createDiary(
+            @AuthenticationPrincipal Member member,
             @RequestPart("data") CreateDiaryRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
-        diaryService.createDiary(request, image);
+        diaryService.createDiary(member, request, image);
         return ResponseEntity.ok(new DiaryCreateResponse("기록 생성이 완료되었습니다."));
     }
 
