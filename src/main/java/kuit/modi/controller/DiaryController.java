@@ -7,6 +7,11 @@ import kuit.modi.dto.diary.response.DiaryCreateResponse;
 import kuit.modi.dto.diary.response.DiaryDeleteResponse;
 import kuit.modi.dto.diary.response.DiaryUpdateResponse;
 import kuit.modi.dto.diary.response.FavoriteUpdateResponse;
+import kuit.modi.domain.Member;
+import kuit.modi.dto.*;
+import kuit.modi.exception.InvalidDateException;
+import kuit.modi.exception.InvalidYearMonthException;
+import kuit.modi.service.DiaryQueryService;
 import kuit.modi.service.DiaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -17,12 +22,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/diaries")
 @RequiredArgsConstructor
 public class DiaryController {
 
     private final DiaryService diaryService;
+    private final DiaryQueryService diaryQueryService;
 
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> createDiary(
@@ -60,5 +70,88 @@ public class DiaryController {
         diaryService.deleteDiary(diaryId);
         return ResponseEntity.ok(new DiaryDeleteResponse("기록 삭제가 완료되었습니다."));
     }
+
+    //일기 상세 조회
+    @GetMapping("/{diaryId}")
+    public ResponseEntity<DiaryDetailResponse> getDiaryDetail(
+            @AuthenticationPrincipal Member member,
+            @PathVariable Long diaryId
+    ) {
+        DiaryDetailResponse response = diaryQueryService.getDiaryDetail(diaryId, member);
+        return ResponseEntity.ok(response);
+    }
+
+    //일기 날짜 기반 조회 (메인 + 이전/다음)
+    @GetMapping(params = "date")
+    public ResponseEntity<DailyDiaryDetailResponse> getDailyDiaryDetail(
+            @AuthenticationPrincipal Member member,
+            @RequestParam String date
+    ) {
+        LocalDate parsedDate;
+        try {
+            parsedDate = LocalDate.parse(date);
+        } catch (DateTimeParseException e) {
+            throw new InvalidDateException();
+        }
+
+        DailyDiaryDetailResponse response = diaryQueryService.getDailyDetail(parsedDate, member);
+        return ResponseEntity.ok(response);
+    }
+
+    // 특정 연/월의 일기 목록 조회 (월별 보기)
+    @GetMapping(params = {"year", "month"})
+    public ResponseEntity<List<DiaryMonthlyItemDto>> getMonthlyDiaries(
+            @AuthenticationPrincipal Member member,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month
+    ) {
+        if (year != null && month != null) {
+            List<DiaryMonthlyItemDto> diaries = diaryQueryService.getMonthlyDiaries(year, month, member);
+            return ResponseEntity.ok(diaries);
+        }
+
+        // 다른 GET 쿼리(예: ?date=2025-07-17)와 구분이 필요하다면 여기에 분기 추가
+        throw new InvalidYearMonthException(); // 예시
+    }
+
+    // 즐겨찾기한 일기 목록 조회
+    @GetMapping("/favorites")
+    public ResponseEntity<List<FavoriteDiaryItemDto>> getFavoriteDiaries(
+            @AuthenticationPrincipal Member member
+    ) {
+        List<FavoriteDiaryItemDto> favorites = diaryQueryService.getFavoriteDiaries(member);
+        return ResponseEntity.ok(favorites);
+    }
+
+    // 월간 통계 조회 API
+    @GetMapping("/statistics")
+    public ResponseEntity<DiaryStatisticsResponse> getMonthlyStatistics(
+            @AuthenticationPrincipal Member member,
+            @RequestParam int year,
+            @RequestParam int month
+    ) {
+        DiaryStatisticsResponse response = diaryQueryService.getMonthlyStatistics(year, month, member);
+        return ResponseEntity.ok(response);
+    }
+
+    // 특정 태그 기반으로 일기 검색 (날짜별 이미지 리스트)
+    @GetMapping(params = "tagId")
+    public ResponseEntity<List<DiaryTagSearchItemDto>> getDiariesByTag(
+            @AuthenticationPrincipal Member member,
+            @RequestParam Long tagId
+    ) {
+        List<DiaryTagSearchItemDto> results = diaryQueryService.getDiariesByTag(tagId, member);
+        return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/tags/popular")
+    public ResponseEntity<List<String>> getPopularTags() {
+        List<String> tags = diaryQueryService.getPopularTags();
+        return ResponseEntity.ok(tags);
+    }
+
+
 }
+
+
 
