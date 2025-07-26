@@ -24,14 +24,6 @@ public class DiaryController {
 
     private final DiaryService diaryService;
 
-//    @PostMapping(consumes = "multipart/form-data")
-//    public ResponseEntity<?> createDiary(
-//            @RequestPart("data") CreateDiaryRequest request,
-//            @RequestPart(value = "image", required = false) MultipartFile image
-//    ) {
-//        diaryService.createDiary(request, image);
-//        return ResponseEntity.ok(new DiaryCreateResponse("기록 생성이 완료되었습니다."));
-//    }
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> createDiary(
             @AuthenticationPrincipal Member member,
