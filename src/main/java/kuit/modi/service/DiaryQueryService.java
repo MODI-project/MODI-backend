@@ -2,8 +2,8 @@
 package kuit.modi.service;
 
 import kuit.modi.domain.*;
-import kuit.modi.dto.*;
-import kuit.modi.dto.DiaryDetailResponse.*;
+import kuit.modi.dto.diary.response.*;
+import kuit.modi.dto.diary.response.DiaryDetailResponse.*;
 import kuit.modi.exception.DiaryNotFoundException;
 import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.repository.DiaryQueryRepository;
@@ -148,7 +148,7 @@ public class DiaryQueryService {
 
     //특정 연/월에 해당하는 일기 목록 조회
     @Transactional(readOnly = true)
-    public List<DiaryMonthlyItemDto> getMonthlyDiaries(int year, int month, Member member) {
+    public List<DiaryMonthlyItemResponse> getMonthlyDiaries(int year, int month, Member member) {
         if (month < 1 || month > 12) {
             throw new InvalidYearMonthException();
         }
@@ -156,7 +156,7 @@ public class DiaryQueryService {
         List<Diary> diaries = diaryQueryRepository.findByYearMonth(member.getId(), year, month);
 
         return diaries.stream()
-                .map(diary -> new DiaryMonthlyItemDto(
+                .map(diary -> new DiaryMonthlyItemResponse(
                         diary.getId(),
                         diary.getDate().toLocalDate(),
                         diary.getImage() != null ? diary.getImage().getUrl() : null,
@@ -167,11 +167,11 @@ public class DiaryQueryService {
 
     //즐겨찾기한 일기 목록 조회
     @Transactional(readOnly = true)
-    public List<FavoriteDiaryItemDto> getFavoriteDiaries(Member member) {
+    public List<FavoriteDiaryItemResponse> getFavoriteDiaries(Member member) {
         List<Diary> diaries = diaryQueryRepository.findFavorites(member.getId());
 
         return diaries.stream()
-                .map(diary -> new FavoriteDiaryItemDto(
+                .map(diary -> new FavoriteDiaryItemResponse(
                         diary.getId(),
                         diary.getDate().toLocalDate(),
                         diary.getImage() != null ? diary.getImage().getUrl() : null
@@ -218,7 +218,7 @@ public class DiaryQueryService {
     }
 
     @Transactional(readOnly = true)
-    public List<DiaryTagSearchItemDto> getDiariesByTag(Long tagId, Member member) {
+    public List<DiaryTagSearchItemResponse> getDiariesByTag(Long tagId, Member member) {
         Long memberId = member.getId();
 
         // (날짜, 이미지 URL) 튜플 리스트
@@ -234,7 +234,7 @@ public class DiaryQueryService {
 
         // 그룹된 데이터 DTO로 변환
         return grouped.entrySet().stream()
-                .map(entry -> new DiaryTagSearchItemDto(entry.getKey(), entry.getValue()))
+                .map(entry -> new DiaryTagSearchItemResponse(entry.getKey(), entry.getValue()))
                 .toList();
     }
 
