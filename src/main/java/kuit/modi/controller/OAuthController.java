@@ -55,7 +55,7 @@ public class OAuthController {
 
         // jwt를 생성해서 쿠키에 포함하여 전달
         String jwt = jwtService.createToken(member.getId());
-        //System.out.println(jwt);
+        System.out.println(jwt);
         ResponseCookie cookie = ResponseCookie.from("access_token", jwt)
                 .httpOnly(true)
                 .secure(false)
