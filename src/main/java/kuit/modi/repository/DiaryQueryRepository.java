@@ -6,6 +6,8 @@ import kuit.modi.domain.Diary;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,17 +41,21 @@ public class DiaryQueryRepository {
      * 특정 날짜의 일기를 createdAt 기준으로 정렬하여 조회
      */
     public List<Diary> findDiariesByDate(Long memberId, LocalDate date) {
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
         return em.createQuery(
                         "SELECT d FROM Diary d " +
                                 "LEFT JOIN FETCH d.emotion " +
                                 "LEFT JOIN FETCH d.image " +
                                 "LEFT JOIN FETCH d.diaryTags dt " +
                                 "LEFT JOIN FETCH dt.tag " +
-                                "WHERE d.member.id = :memberId AND d.date = :date " +
+                                "WHERE d.member.id = :memberId AND d.date BETWEEN :start AND :end " +
                                 "ORDER BY d.createdAt ASC", Diary.class
                 )
                 .setParameter("memberId", memberId)
-                .setParameter("date", date)
+                .setParameter("start", startOfDay)
+                .setParameter("end", endOfDay)
                 .getResultList();
     }
 
