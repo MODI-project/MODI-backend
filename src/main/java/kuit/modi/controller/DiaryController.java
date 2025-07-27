@@ -29,6 +29,7 @@ public class DiaryController {
     private final DiaryService diaryService;
     private final DiaryQueryService diaryQueryService;
 
+    // 일기 생성
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> createDiary(
             @AuthenticationPrincipal Member member,
@@ -39,6 +40,7 @@ public class DiaryController {
         return ResponseEntity.ok(new DiaryCreateResponse("기록 생성이 완료되었습니다."));
     }
 
+    // 일기 수정
     @PutMapping(value = "/{diaryId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateDiary(
             @PathVariable Long diaryId,
@@ -49,6 +51,7 @@ public class DiaryController {
         return ResponseEntity.ok(new DiaryUpdateResponse(diaryId, "기록 수정이 완료되었습니다."));
     }
 
+    // 일기 즐겨찾기 설정
     @PostMapping("/{diaryId}/favorite")
     public ResponseEntity<?> updateFavorite(
             @PathVariable Long diaryId,
@@ -60,6 +63,7 @@ public class DiaryController {
         );
     }
 
+    // 일기 삭제
     @DeleteMapping("/{diaryId}")
     public ResponseEntity<?> deleteDiary(@PathVariable Long diaryId) {
         diaryService.deleteDiary(diaryId);
@@ -139,13 +143,12 @@ public class DiaryController {
         return ResponseEntity.ok(results);
     }
 
+    // 많이 쓰이는 태그 조회
     @GetMapping("/tags/popular")
     public ResponseEntity<List<String>> getPopularTags() {
         List<String> tags = diaryQueryService.getPopularTags();
         return ResponseEntity.ok(tags);
     }
-
-
 }
 
 
