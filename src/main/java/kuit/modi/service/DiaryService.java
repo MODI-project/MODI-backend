@@ -2,8 +2,8 @@ package kuit.modi.service;
 
 import jakarta.transaction.Transactional;
 import kuit.modi.domain.*;
-import kuit.modi.dto.CreateDiaryRequest;
-import kuit.modi.dto.UpdateDiaryRequest;
+import kuit.modi.dto.diary.request.CreateDiaryRequest;
+import kuit.modi.dto.diary.request.UpdateDiaryRequest;
 import kuit.modi.exception.NotFoundException;
 import kuit.modi.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ public class DiaryService {
     private final S3Service s3Service;
     private final ImageRepository imageRepository;
 
-    public void createDiary(CreateDiaryRequest request, MultipartFile imageFile) {
+    public void createDiary(Member member, CreateDiaryRequest request, MultipartFile imageFile) {
         LocalDateTime parsedDate = LocalDateTime.parse(request.date());
         LocalDateTime now = LocalDateTime.now();
 
@@ -37,10 +37,8 @@ public class DiaryService {
                 .orElseThrow(() -> new IllegalArgumentException("감정 정보가 유효하지 않습니다."));
         Tone tone = toneRepository.findByName(request.tone())
                 .orElseThrow(() -> new IllegalArgumentException("톤 정보가 유효하지 않습니다."));
-        Frame frame = frameRepository.findByName(request.frame()) // 문자열 → Frame 엔티티
+        Frame frame = frameRepository.findByName(request.frame())
                 .orElseThrow(() -> new IllegalArgumentException("프레임 정보가 유효하지 않습니다."));
-        Member member = memberRepository.findById(request.memberId())
-                .orElseThrow(() -> new IllegalArgumentException("회원 정보가 유효하지 않습니다."));
 
         Location location = locationRepository.findByAddress(request.address())
                 .orElseGet(() -> {

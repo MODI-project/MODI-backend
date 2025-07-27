@@ -1,9 +1,8 @@
-package kuit.modi.dto;
+package kuit.modi.dto.diary.request;
 
 import java.util.List;
 
-public record CreateDiaryRequest(
-        Long memberId,
+public record UpdateDiaryRequest(
         String content,
         String summary,
         String date,
@@ -14,5 +13,5 @@ public record CreateDiaryRequest(
         String tone,
         List<String> tags,
         String font,
-        String frame
+        Long frameId
 ) {}
