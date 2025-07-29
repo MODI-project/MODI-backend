@@ -70,6 +70,15 @@ public class DiaryController {
         return ResponseEntity.ok(new DiaryDeleteResponse("기록 삭제가 완료되었습니다."));
     }
 
+    // 홈화면 전체 일기 조회용
+    @GetMapping
+    public ResponseEntity<?> getDiaryAll(
+            @AuthenticationPrincipal Member member
+    ) {
+        DiaryAllResponse response = diaryQueryService.getDiaryAll(member);
+        return ResponseEntity.ok(response);
+    }
+
     //일기 상세 조회
     @GetMapping("/{diaryId}")
     public ResponseEntity<DiaryDetailResponse> getDiaryDetail(
@@ -149,6 +158,29 @@ public class DiaryController {
         List<String> tags = diaryQueryService.getPopularTags();
         return ResponseEntity.ok(tags);
     }
+
+    // 지도 조회
+    @GetMapping("/nearby")
+    public ResponseEntity<List<DiaryNearbyResponse>> getNearbyDiaries(
+            @RequestParam double swLat,
+            @RequestParam double swLng,
+            @RequestParam double neLat,
+            @RequestParam double neLng) {
+
+        List<DiaryNearbyResponse> diaries = diaryQueryService.getNearbyDiaries(swLat, swLng, neLat, neLng);
+        return ResponseEntity.ok(diaries);
+    }
+
+    // 리마인더 알림용 요청
+    @GetMapping("/reminder")
+    public ResponseEntity<List<DiaryReminderResponse>> getReminderDiaries(
+            @RequestParam double latitude,
+            @RequestParam double longitude) {
+
+        List<DiaryReminderResponse> response = diaryQueryService.getReminderDiaries(latitude, longitude);
+        return ResponseEntity.ok(response);
+    }
+
 }
 
 
