@@ -201,4 +201,33 @@ public class DiaryQueryRepository {
                 .setParameter("neLng", neLng)
                 .getResultList();
     }
+
+    /*
+     * 지정한 위도/경도 기준 반경 m 이내의 일기를 조회 (Location 포함)
+     */
+    public List<Diary> findDiariesWithinRadius(double latitude, double longitude, double radiusInMeters) {
+        // 위도/경도 기준 100m 범위 내 사각형 영역으로 계산
+        // 근사치로 계산, 정밀한 계산을 원하면 수정 가능
+        double earthRadius = 6371000; // meters
+        double deltaLat = Math.toDegrees(radiusInMeters / earthRadius);
+        double deltaLng = Math.toDegrees(radiusInMeters / (earthRadius * Math.cos(Math.toRadians(latitude))));
+
+        double minLat = latitude - deltaLat;
+        double maxLat = latitude + deltaLat;
+        double minLng = longitude - deltaLng;
+        double maxLng = longitude + deltaLng;
+
+        return em.createQuery(
+                        "SELECT DISTINCT d FROM Diary d " +
+                                "JOIN FETCH d.location l " +
+                                "LEFT JOIN FETCH d.image " +
+                                "WHERE l.latitude BETWEEN :minLat AND :maxLat " +
+                                "AND l.longitude BETWEEN :minLng AND :maxLng", Diary.class)
+                .setParameter("minLat", minLat)
+                .setParameter("maxLat", maxLat)
+                .setParameter("minLng", minLng)
+                .setParameter("maxLng", maxLng)
+                .getResultList();
+    }
+
 }

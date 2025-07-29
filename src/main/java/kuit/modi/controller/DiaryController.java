@@ -170,6 +170,17 @@ public class DiaryController {
         List<DiaryNearbyResponse> diaries = diaryQueryService.getNearbyDiaries(swLat, swLng, neLat, neLng);
         return ResponseEntity.ok(diaries);
     }
+
+    // 리마인더 알림용 요청
+    @GetMapping("/reminder")
+    public ResponseEntity<List<DiaryReminderResponse>> getReminderDiaries(
+            @RequestParam double latitude,
+            @RequestParam double longitude) {
+
+        List<DiaryReminderResponse> response = diaryQueryService.getReminderDiaries(latitude, longitude);
+        return ResponseEntity.ok(response);
+    }
+
 }
 
 

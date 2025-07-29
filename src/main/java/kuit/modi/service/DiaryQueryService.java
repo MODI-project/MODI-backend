@@ -274,6 +274,7 @@ public class DiaryQueryService {
         return tagRepository.findTopTagNames(PageRequest.of(0, 10)); // 상위 10개
     }
 
+    // 지도 조회용
     public List<DiaryNearbyResponse> getNearbyDiaries(double swLat, double swLng, double neLat, double neLng) {
         List<Diary> diaries = diaryQueryRepository.findNearbyDiaries(swLat, swLng, neLat, neLng);
 
@@ -296,6 +297,20 @@ public class DiaryQueryService {
                             thumbnailUrl
                     );
                 })
+                .collect(Collectors.toList());
+    }
+
+    // 리마인더 알림용
+    public List<DiaryReminderResponse> getReminderDiaries(double latitude, double longitude) {
+        double radiusInMeters = 100.0;      // 변경 가능
+        List<Diary> nearbyDiaries = diaryQueryRepository.findDiariesWithinRadius(latitude, longitude, radiusInMeters);
+
+        return nearbyDiaries.stream()
+                .map(diary -> new DiaryReminderResponse(
+                        diary.getId(),
+                        diary.getDate(),
+                        "https://cdn.modi.com/diary/" + diary.getId() + "/thumb.jpg"
+                ))
                 .collect(Collectors.toList());
     }
 
