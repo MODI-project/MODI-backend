@@ -69,7 +69,7 @@ public class OAuthController {
         // 프론트엔드로 리디렉션 - 현재는 localhost로 설정, 추후 수정 필요
         String redirectUrl = "http://localhost:5173/home";
         if(isNew)
-            redirectUrl = "http://localhost:5173/test-initialsetting";
+            redirectUrl = "http://localhost:5173/information-setting";
 
         response.sendRedirect(redirectUrl);
     }
