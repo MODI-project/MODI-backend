@@ -242,5 +242,29 @@ public class DiaryQueryService {
         return tagRepository.findTopTagNames(PageRequest.of(0, 10)); // 상위 10개
     }
 
+    public List<DiaryNearbyResponse> getNearbyDiaries(double swLat, double swLng, double neLat, double neLng) {
+        List<Diary> diaries = diaryQueryRepository.findNearbyDiaries(swLat, swLng, neLat, neLng);
+
+        return diaries.stream()
+                .map(diary -> {
+                    String thumbnailUrl = (diary.getImage() != null && diary.getImage().getUrl() != null)
+                            ? diary.getImage().getUrl()
+                            : "https://cdn.modi.com/default-thumb.jpg";
+
+                    return new DiaryNearbyResponse(
+                            diary.getId(),
+                            diary.getDate(),
+                            diary.getEmotion().getName(),  // 감정 이름을 가져온다고 가정
+                            new DiaryNearbyResponse.LocationDto(
+                                    diary.getLocation().getId(),
+                                    diary.getLocation().getAddress(),
+                                    diary.getLocation().getLatitude(),
+                                    diary.getLocation().getLongitude()
+                            ),
+                            thumbnailUrl
+                    );
+                })
+                .collect(Collectors.toList());
+    }
 
 }

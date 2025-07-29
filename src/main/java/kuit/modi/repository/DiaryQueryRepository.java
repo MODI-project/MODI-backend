@@ -165,5 +165,22 @@ public class DiaryQueryRepository {
                 .getResultList();
     }
 
-
+    /*
+     * 지도 범위 내 위/경도(lat/lng)에 해당하는 일기 목록 조회
+     * - Location 포함 fetch
+     */
+    public List<Diary> findNearbyDiaries(double swLat, double swLng, double neLat, double neLng) {
+        return em.createQuery(
+                        "SELECT DISTINCT d FROM Diary d " +
+                                "JOIN FETCH d.location l " +
+                                "LEFT JOIN FETCH d.emotion " +
+                                "LEFT JOIN FETCH d.image " +
+                                "WHERE l.latitude BETWEEN :swLat AND :neLat " +
+                                "AND l.longitude BETWEEN :swLng AND :neLng", Diary.class)
+                .setParameter("swLat", swLat)
+                .setParameter("neLat", neLat)
+                .setParameter("swLng", swLng)
+                .setParameter("neLng", neLng)
+                .getResultList();
+    }
 }

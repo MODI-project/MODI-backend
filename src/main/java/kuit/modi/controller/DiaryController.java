@@ -149,6 +149,18 @@ public class DiaryController {
         List<String> tags = diaryQueryService.getPopularTags();
         return ResponseEntity.ok(tags);
     }
+
+    // 지도 조회
+    @GetMapping("/nearby")
+    public ResponseEntity<List<DiaryNearbyResponse>> getNearbyDiaries(
+            @RequestParam double swLat,
+            @RequestParam double swLng,
+            @RequestParam double neLat,
+            @RequestParam double neLng) {
+
+        List<DiaryNearbyResponse> diaries = diaryQueryService.getNearbyDiaries(swLat, swLng, neLat, neLng);
+        return ResponseEntity.ok(diaries);
+    }
 }
 
 
