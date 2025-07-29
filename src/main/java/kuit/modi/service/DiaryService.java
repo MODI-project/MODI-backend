@@ -35,12 +35,17 @@ public class DiaryService {
 
         Emotion emotion = emotionRepository.findByName(request.emotion())
                 .orElseThrow(() -> new IllegalArgumentException("감정 정보가 유효하지 않습니다."));
-        Tone tone = toneRepository.findByName(request.tone())
-                .orElseThrow(() -> new IllegalArgumentException("톤 정보가 유효하지 않습니다."));
+
+        Tone tone = toneRepository.findByName(request.tone()) // 톤 정보 없을 시 생성
+                .orElseGet(() -> {
+                    Tone newTone = Tone.create(request.tone());
+                    return toneRepository.save(newTone);
+                });
+
         Frame frame = frameRepository.findByName(request.frame())
                 .orElseThrow(() -> new IllegalArgumentException("프레임 정보가 유효하지 않습니다."));
 
-        Location location = locationRepository.findByAddress(request.address())
+        Location location = locationRepository.findByAddress(request.address()) // 위치 정보 없을 시 생성
                 .orElseGet(() -> {
                     Location newLocation = Location.create(request.address(), request.latitude(), request.longitude());
                     return locationRepository.save(newLocation);
