@@ -70,6 +70,15 @@ public class DiaryController {
         return ResponseEntity.ok(new DiaryDeleteResponse("기록 삭제가 완료되었습니다."));
     }
 
+    // 홈화면 전체 일기 조회용
+    @GetMapping
+    public ResponseEntity<?> getDiaryAll(
+            @AuthenticationPrincipal Member member
+    ) {
+        DiaryAllResponse response = diaryQueryService.getDiaryAll(member);
+        return ResponseEntity.ok(response);
+    }
+
     //일기 상세 조회
     @GetMapping("/{diaryId}")
     public ResponseEntity<DiaryDetailResponse> getDiaryDetail(
