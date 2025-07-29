@@ -124,7 +124,7 @@ public class DiaryQueryService {
         return new DailyDiaryDetailResponse.MainDiaryDto(
                 diary.getId(),
                 diary.getSummary(),
-                diary.getCreatedAt(),
+                diary.getDate(),
                 diary.getImage() != null ? diary.getImage().getUrl() : null,
                 tags,
                 frameId
