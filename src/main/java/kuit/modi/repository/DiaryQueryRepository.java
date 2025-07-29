@@ -17,6 +17,24 @@ public class DiaryQueryRepository {
     @PersistenceContext
     private EntityManager em;
 
+    public List<Diary> findAllByMemberId(Long memberId) {
+        return em.createQuery(
+                        "SELECT DISTINCT d FROM Diary d " +
+                                "LEFT JOIN FETCH d.emotion " +
+                                "LEFT JOIN FETCH d.tone " +
+                                "LEFT JOIN FETCH d.location " +
+                                "LEFT JOIN FETCH d.style s " +
+                                "LEFT JOIN FETCH s.frame " +
+                                "LEFT JOIN FETCH d.image " +
+                                "LEFT JOIN FETCH d.diaryTags dt " +
+                                "LEFT JOIN FETCH dt.tag " +
+                                "WHERE d.member.id = :memberId " +
+                                "ORDER BY d.createdAt ASC", Diary.class
+                )
+                .setParameter("memberId", memberId)
+                .getResultList();
+    }
+
     /*
      * diaryId에 해당하는 Diary를 연관 엔티티와 함께 조회
      * - Emotion, Tone, Location, Image, Tag 포함 fetch
@@ -165,5 +183,51 @@ public class DiaryQueryRepository {
                 .getResultList();
     }
 
+    /*
+     * 지도 범위 내 위/경도(lat/lng)에 해당하는 일기 목록 조회
+     * - Location 포함 fetch
+     */
+    public List<Diary> findNearbyDiaries(double swLat, double swLng, double neLat, double neLng) {
+        return em.createQuery(
+                        "SELECT DISTINCT d FROM Diary d " +
+                                "JOIN FETCH d.location l " +
+                                "LEFT JOIN FETCH d.emotion " +
+                                "LEFT JOIN FETCH d.image " +
+                                "WHERE l.latitude BETWEEN :swLat AND :neLat " +
+                                "AND l.longitude BETWEEN :swLng AND :neLng", Diary.class)
+                .setParameter("swLat", swLat)
+                .setParameter("neLat", neLat)
+                .setParameter("swLng", swLng)
+                .setParameter("neLng", neLng)
+                .getResultList();
+    }
+
+    /*
+     * 지정한 위도/경도 기준 반경 m 이내의 일기를 조회 (Location 포함)
+     */
+    public List<Diary> findDiariesWithinRadius(double latitude, double longitude, double radiusInMeters) {
+        // 위도/경도 기준 100m 범위 내 사각형 영역으로 계산
+        // 근사치로 계산, 정밀한 계산을 원하면 수정 가능
+        double earthRadius = 6371000; // meters
+        double deltaLat = Math.toDegrees(radiusInMeters / earthRadius);
+        double deltaLng = Math.toDegrees(radiusInMeters / (earthRadius * Math.cos(Math.toRadians(latitude))));
+
+        double minLat = latitude - deltaLat;
+        double maxLat = latitude + deltaLat;
+        double minLng = longitude - deltaLng;
+        double maxLng = longitude + deltaLng;
+
+        return em.createQuery(
+                        "SELECT DISTINCT d FROM Diary d " +
+                                "JOIN FETCH d.location l " +
+                                "LEFT JOIN FETCH d.image " +
+                                "WHERE l.latitude BETWEEN :minLat AND :maxLat " +
+                                "AND l.longitude BETWEEN :minLng AND :maxLng", Diary.class)
+                .setParameter("minLat", minLat)
+                .setParameter("maxLat", maxLat)
+                .setParameter("minLng", minLng)
+                .setParameter("maxLng", maxLng)
+                .getResultList();
+    }
 
 }
