@@ -239,7 +239,7 @@ public class DiaryQueryService {
     }
 
     public List<String> getPopularTags() {
-        return tagRepository.findTopTagNames(PageRequest.of(0, 10));
+        return tagRepository.findTopTagNames(PageRequest.of(0, 10)); // 상위 10개
     }
 
 

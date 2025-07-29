@@ -80,7 +80,7 @@ public class DiaryController {
         return ResponseEntity.ok(response);
     }
 
-    //일기 날짜 기반 조회 (메인 + 이전/다음)
+    //일기 날짜 기반 조회 (메인 + 이전/다음) -> 같은 날 일기가 하나만 있을 경우 이전/다음은 null로 반환
     @GetMapping(params = "date")
     public ResponseEntity<DailyDiaryDetailResponse> getDailyDiaryDetail(
             @AuthenticationPrincipal Member member,
