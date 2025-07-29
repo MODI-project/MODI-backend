@@ -3,7 +3,10 @@ package kuit.modi.service;
 
 import kuit.modi.domain.*;
 import kuit.modi.dto.diary.response.*;
-import kuit.modi.dto.diary.response.DiaryDetailResponse.*;
+import kuit.modi.dto.diary.response.DiaryDetailResponse.EmotionDto;
+import kuit.modi.dto.diary.response.DiaryDetailResponse.LocationDto;
+import kuit.modi.dto.diary.response.DiaryDetailResponse.TagDto;
+import kuit.modi.dto.diary.response.DiaryDetailResponse.ToneDto;
 import kuit.modi.exception.DiaryNotFoundException;
 import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.repository.DiaryQueryRepository;
@@ -26,6 +29,35 @@ public class DiaryQueryService {
 
     private final DiaryQueryRepository diaryQueryRepository;
     private final TagRepository tagRepository;
+
+    @Transactional(readOnly = true)
+    public DiaryAllResponse getDiaryAll(Member member) {
+        List<Diary> diaries = diaryQueryRepository.findAllByMemberId(member.getId());
+
+        List<DiaryHomeResponse> responses = diaries.stream()
+                .map(this::toHomeResponse)
+                .toList();
+
+        return new DiaryAllResponse(responses);
+    }
+
+    private DiaryHomeResponse toHomeResponse(Diary diary) {
+        String photoUrl = diary.getImage() != null ? diary.getImage().getUrl() : null;
+        String emotion = diary.getEmotion() != null ? diary.getEmotion().getName() : null;
+
+        List<String> tags = diary.getDiaryTags().stream()
+                .map(dt -> dt.getTag().getName())
+                .toList();
+
+        return new DiaryHomeResponse(
+                diary.getId(),
+                diary.getDate().toLocalDate(),
+                photoUrl,
+                diary.getSummary(),
+                emotion,
+                tags
+        );
+    }
 
     /*
      * diaryId에 해당하는 일기를 상세 조회합니다.
