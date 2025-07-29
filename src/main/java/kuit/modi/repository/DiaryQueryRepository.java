@@ -17,6 +17,24 @@ public class DiaryQueryRepository {
     @PersistenceContext
     private EntityManager em;
 
+    public List<Diary> findAllByMemberId(Long memberId) {
+        return em.createQuery(
+                        "SELECT DISTINCT d FROM Diary d " +
+                                "LEFT JOIN FETCH d.emotion " +
+                                "LEFT JOIN FETCH d.tone " +
+                                "LEFT JOIN FETCH d.location " +
+                                "LEFT JOIN FETCH d.style s " +
+                                "LEFT JOIN FETCH s.frame " +
+                                "LEFT JOIN FETCH d.image " +
+                                "LEFT JOIN FETCH d.diaryTags dt " +
+                                "LEFT JOIN FETCH dt.tag " +
+                                "WHERE d.member.id = :memberId " +
+                                "ORDER BY d.createdAt ASC", Diary.class
+                )
+                .setParameter("memberId", memberId)
+                .getResultList();
+    }
+
     /*
      * diaryId에 해당하는 Diary를 연관 엔티티와 함께 조회
      * - Emotion, Tone, Location, Image, Tag 포함 fetch
