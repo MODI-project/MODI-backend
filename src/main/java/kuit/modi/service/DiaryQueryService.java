@@ -3,7 +3,10 @@ package kuit.modi.service;
 
 import kuit.modi.domain.*;
 import kuit.modi.dto.diary.response.*;
-import kuit.modi.dto.diary.response.DiaryDetailResponse.*;
+import kuit.modi.dto.diary.response.DiaryDetailResponse.EmotionDto;
+import kuit.modi.dto.diary.response.DiaryDetailResponse.LocationDto;
+import kuit.modi.dto.diary.response.DiaryDetailResponse.TagDto;
+import kuit.modi.dto.diary.response.DiaryDetailResponse.ToneDto;
 import kuit.modi.exception.DiaryNotFoundException;
 import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.repository.DiaryQueryRepository;
@@ -26,6 +29,35 @@ public class DiaryQueryService {
 
     private final DiaryQueryRepository diaryQueryRepository;
     private final TagRepository tagRepository;
+
+    @Transactional(readOnly = true)
+    public DiaryAllResponse getDiaryAll(Member member) {
+        List<Diary> diaries = diaryQueryRepository.findAllByMemberId(member.getId());
+
+        List<DiaryHomeResponse> responses = diaries.stream()
+                .map(this::toHomeResponse)
+                .toList();
+
+        return new DiaryAllResponse(responses);
+    }
+
+    private DiaryHomeResponse toHomeResponse(Diary diary) {
+        String photoUrl = diary.getImage() != null ? diary.getImage().getUrl() : null;
+        String emotion = diary.getEmotion() != null ? diary.getEmotion().getName() : null;
+
+        List<String> tags = diary.getDiaryTags().stream()
+                .map(dt -> dt.getTag().getName())
+                .toList();
+
+        return new DiaryHomeResponse(
+                diary.getId(),
+                diary.getDate().toLocalDate(),
+                photoUrl,
+                diary.getSummary(),
+                emotion,
+                tags
+        );
+    }
 
     /*
      * diaryId에 해당하는 일기를 상세 조회합니다.
@@ -124,7 +156,7 @@ public class DiaryQueryService {
         return new DailyDiaryDetailResponse.MainDiaryDto(
                 diary.getId(),
                 diary.getSummary(),
-                diary.getCreatedAt(),
+                diary.getDate(),
                 diary.getImage() != null ? diary.getImage().getUrl() : null,
                 tags,
                 frameId
@@ -242,5 +274,44 @@ public class DiaryQueryService {
         return tagRepository.findTopTagNames(PageRequest.of(0, 10)); // 상위 10개
     }
 
+    // 지도 조회용
+    public List<DiaryNearbyResponse> getNearbyDiaries(double swLat, double swLng, double neLat, double neLng) {
+        List<Diary> diaries = diaryQueryRepository.findNearbyDiaries(swLat, swLng, neLat, neLng);
+
+        return diaries.stream()
+                .map(diary -> {
+                    String thumbnailUrl = (diary.getImage() != null && diary.getImage().getUrl() != null)
+                            ? diary.getImage().getUrl()
+                            : "https://cdn.modi.com/default-thumb.jpg";
+
+                    return new DiaryNearbyResponse(
+                            diary.getId(),
+                            diary.getDate(),
+                            diary.getEmotion().getName(),  // 감정 이름을 가져온다고 가정
+                            new DiaryNearbyResponse.LocationDto(
+                                    diary.getLocation().getId(),
+                                    diary.getLocation().getAddress(),
+                                    diary.getLocation().getLatitude(),
+                                    diary.getLocation().getLongitude()
+                            ),
+                            thumbnailUrl
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
+    // 리마인더 알림용
+    public List<DiaryReminderResponse> getReminderDiaries(double latitude, double longitude) {
+        double radiusInMeters = 100.0;      // 변경 가능
+        List<Diary> nearbyDiaries = diaryQueryRepository.findDiariesWithinRadius(latitude, longitude, radiusInMeters);
+
+        return nearbyDiaries.stream()
+                .map(diary -> new DiaryReminderResponse(
+                        diary.getId(),
+                        diary.getDate(),
+                        "https://cdn.modi.com/diary/" + diary.getId() + "/thumb.jpg"
+                ))
+                .collect(Collectors.toList());
+    }
 
 }
