@@ -29,6 +29,7 @@ public class DiaryService {
     private final S3Service s3Service;
     private final ImageRepository imageRepository;
 
+    @Transactional
     public void createDiary(Member member, CreateDiaryRequest request, MultipartFile imageFile) {
         LocalDateTime parsedDate = LocalDateTime.parse(request.date());
         LocalDateTime now = LocalDateTime.now();
