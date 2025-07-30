@@ -1,4 +1,4 @@
-package kuit.modi.dto;
+package kuit.modi.dto.member;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
