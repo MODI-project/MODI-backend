@@ -1,6 +1,6 @@
 package kuit.modi.service;
 
-import kuit.modi.dto.GoogleUserInfo;
+import kuit.modi.dto.member.GoogleUserInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;

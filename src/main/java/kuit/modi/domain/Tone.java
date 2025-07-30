@@ -17,4 +17,10 @@ public class Tone {
 
     @Column(nullable = false, unique = true, length = 30)
     private String name;
+
+    public static Tone create(String name) {
+        Tone tone = new Tone();
+        tone.setName(name);
+        return tone;
+    }
 }
