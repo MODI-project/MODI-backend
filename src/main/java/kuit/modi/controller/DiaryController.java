@@ -36,8 +36,8 @@ public class DiaryController {
             @RequestPart("data") CreateDiaryRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
-        diaryService.createDiary(member, request, image);
-        return ResponseEntity.ok(new DiaryCreateResponse("기록 생성이 완료되었습니다."));
+        Long createdId = diaryService.createDiary(member, request, image);
+        return ResponseEntity.ok(new DiaryCreateResponse(createdId, "기록 생성이 완료되었습니다."));
     }
 
     // 일기 수정
