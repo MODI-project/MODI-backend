@@ -22,14 +22,12 @@ public class DiaryService {
     private final EmotionRepository emotionRepository;
     private final ToneRepository toneRepository;
     private final LocationRepository locationRepository;
-    private final MemberRepository memberRepository;
     private final FrameRepository frameRepository;
     private final TagRepository tagRepository;
     private final DiaryTagRepository diaryTagRepository;
     private final S3Service s3Service;
-    private final ImageRepository imageRepository;
 
-    public void createDiary(Member member, CreateDiaryRequest request, MultipartFile imageFile) {
+    public Long createDiary(Member member, CreateDiaryRequest request, MultipartFile imageFile) {
         LocalDateTime parsedDate = LocalDateTime.parse(request.date());
         LocalDateTime now = LocalDateTime.now();
 
@@ -85,7 +83,7 @@ public class DiaryService {
                 .toList();
 
         diary.getDiaryTags().addAll(diaryTags);
-        diaryRepository.save(diary);
+        return diaryRepository.save(diary).getId();
     }
 
     @Transactional
