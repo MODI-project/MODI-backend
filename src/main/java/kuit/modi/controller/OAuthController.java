@@ -66,10 +66,12 @@ public class OAuthController {
 
         response.addHeader("Set-Cookie", cookie.toString());
 
-        // 프론트엔드로 리디렉션 - 현재는 localhost로 설정, 추후 수정 필요
-        String redirectUrl = "http://localhost:5173/home";
+        // 프론트엔드로 리디렉션
+        //String redirectUrl = "http://localhost:5173/home";
+        String redirectUrl = "https://modi-frontend-beryl.vercel.app/home";
         if(isNew)
-            redirectUrl = "http://localhost:5173/information-setting";
+//            redirectUrl = "http://localhost:5173/information-setting";
+            redirectUrl = "https://modi-frontend-beryl.vercel.app/information-setting";
 
         response.sendRedirect(redirectUrl);
     }
