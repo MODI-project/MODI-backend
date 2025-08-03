@@ -55,7 +55,8 @@ public class DiaryQueryService {
                 photoUrl,
                 diary.getSummary(),
                 emotion,
-                tags
+                tags,
+                diary.getCreatedAt()
         );
     }
 
@@ -116,31 +117,16 @@ public class DiaryQueryService {
         );
     }
 
-    //특정 날짜의 일기 중 하나를 메인으로, 양 옆 일기도 함께 조회
+    //메인홈 일별보기 기능을 위한 월 전체 응답
     @Transactional(readOnly = true)
-    public DailyDiaryDetailResponse getDailyDetail(LocalDate date, Member member) {
-        List<Diary> diaries = diaryQueryRepository.findDiariesByDate(member.getId(), date);
+    public DiaryAllResponse getDailyDetailMonthly(int year, int month, Member member) {
+        List<Diary> diaries = diaryQueryRepository.findByYearMonthForDaily(member.getId(), year, month);
 
-        if (diaries.isEmpty()) {
-            throw new DiaryNotFoundException();
-        }
+        List<DiaryHomeResponse> responses = diaries.stream()
+                .map(this::toHomeResponse)
+                .toList();
 
-        // 메인 일기는 첫 번째
-        Diary main = diaries.get(0);
-        DailyDiaryDetailResponse.MainDiaryDto mainDto = toMainDto(main);
-
-        // 이전/다음은 인덱스 1, 2 기준
-        DailyDiaryDetailResponse.AdjacentDiaryDto previous = null;
-        DailyDiaryDetailResponse.AdjacentDiaryDto next = null;
-
-        if (diaries.size() > 1) {
-            next = toAdjacentDto(diaries.get(1));
-        }
-        if (diaries.size() > 2) {
-            previous = toAdjacentDto(diaries.get(2));
-        }
-
-        return new DailyDiaryDetailResponse(mainDto, previous, next);
+        return new DiaryAllResponse(responses);
     }
 
     private DailyDiaryDetailResponse.MainDiaryDto toMainDto(Diary diary) {
@@ -192,7 +178,8 @@ public class DiaryQueryService {
                         diary.getId(),
                         diary.getDate().toLocalDate(),
                         diary.getImage() != null ? diary.getImage().getUrl() : null,
-                        diary.getEmotion().getName()
+                        diary.getEmotion().getName(),
+                        diary.getCreatedAt()
                 ))
                 .toList();
     }
@@ -206,7 +193,8 @@ public class DiaryQueryService {
                 .map(diary -> new FavoriteDiaryItemResponse(
                         diary.getId(),
                         diary.getDate().toLocalDate(),
-                        diary.getImage() != null ? diary.getImage().getUrl() : null
+                        diary.getImage() != null ? diary.getImage().getUrl() : null,
+                        diary.getCreatedAt()
                 ))
                 .toList();
     }
