@@ -26,7 +26,7 @@ public class OpenAiClient {
                 .build();
 
         Map<String, Object> requestBody = Map.of(
-                "model", "gpt-3.5-turbo",
+                "model", "gpt-4-turbo",
                 "messages", List.of(
                         Map.of("role", "user", "content", prompt)
                 )

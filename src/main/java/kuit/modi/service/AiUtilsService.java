@@ -23,7 +23,7 @@ public class AiUtilsService {
     }
 
     public String summarizeDiary(SummaryRequest request) {
-        String prompt = "다음 일기를 '~다.'와 같은 말투로 40자 이내로 요약해줘:\n" + request.getContent();
+        String prompt = "다음 일기를 40자 이내로 요약해줘:\n" + request.getContent();
         return openAiClient.ask(prompt);
     }
 
