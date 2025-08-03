@@ -13,7 +13,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/modidb?serverTimezone=Asia/Seoul
     username: root
-    password: chaedbkey111!
+    password: 1111
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -43,3 +43,9 @@ cloud:
       static: ${AWS_REGION}
     s3:
       bucket: ${AWS_S3_BUCKET}
+
+app:
+  frontend:
+    local: http://localhost:5173
+    prod: https://modi-frontend-beryl.vercel.app
+  mode: prod # local 또는 prod, 배포 시 변경 가능
