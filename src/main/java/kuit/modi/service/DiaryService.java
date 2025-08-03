@@ -142,13 +142,13 @@ public class DiaryService {
             }
         }
         
-        if (request.frameId() != null) {
-            Frame frame = frameRepository.findById(request.frameId())
+        if (request.frame() != null) {
+            Frame frame = frameRepository.findById(request.frame())
                     .orElseThrow(() -> new IllegalArgumentException("프레임 정보가 유효하지 않습니다."));
-            Style style = Style.create(request.font(), diary, frame);
-            diary.setStyle(style);
-        } else {
-            diary.setStyle(null);
+
+            Style style = diary.getStyle();
+            style.setFont(request.font());
+            style.setFrame(frame);
         }
     }
 
