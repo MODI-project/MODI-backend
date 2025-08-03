@@ -13,5 +13,5 @@ public record UpdateDiaryRequest(
         String tone,
         List<String> tags,
         String font,
-        Long frameId
+        Long frame
 ) {}
