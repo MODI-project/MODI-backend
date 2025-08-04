@@ -22,14 +22,13 @@ public class DiaryService {
     private final EmotionRepository emotionRepository;
     private final ToneRepository toneRepository;
     private final LocationRepository locationRepository;
-    private final MemberRepository memberRepository;
     private final FrameRepository frameRepository;
     private final TagRepository tagRepository;
     private final DiaryTagRepository diaryTagRepository;
     private final S3Service s3Service;
-    private final ImageRepository imageRepository;
 
-    public void createDiary(Member member, CreateDiaryRequest request, MultipartFile imageFile) {
+    @Transactional
+    public Long createDiary(Member member, CreateDiaryRequest request, MultipartFile imageFile) {
         LocalDateTime parsedDate = LocalDateTime.parse(request.date());
         LocalDateTime now = LocalDateTime.now();
 
@@ -85,7 +84,7 @@ public class DiaryService {
                 .toList();
 
         diary.getDiaryTags().addAll(diaryTags);
-        diaryRepository.save(diary);
+        return diaryRepository.save(diary).getId();
     }
 
     @Transactional
@@ -143,13 +142,13 @@ public class DiaryService {
             }
         }
         
-        if (request.frameId() != null) {
-            Frame frame = frameRepository.findById(request.frameId())
+        if (request.frame() != null) {
+            Frame frame = frameRepository.findById(request.frame())
                     .orElseThrow(() -> new IllegalArgumentException("프레임 정보가 유효하지 않습니다."));
-            Style style = Style.create(request.font(), diary, frame);
-            diary.setStyle(style);
-        } else {
-            diary.setStyle(null);
+
+            Style style = diary.getStyle();
+            style.setFont(request.font());
+            style.setFrame(frame);
         }
     }
 
