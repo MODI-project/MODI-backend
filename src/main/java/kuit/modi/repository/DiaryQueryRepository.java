@@ -78,6 +78,27 @@ public class DiaryQueryRepository {
     }
 
     /*
+     * 일별 보기 기능을 위한 월별 조회
+     */
+    public List<Diary> findByYearMonthForDaily(Long memberId, int year, int month) {
+        return em.createQuery(
+                        "SELECT d FROM Diary d " +
+                                "LEFT JOIN FETCH d.image " +
+                                "LEFT JOIN FETCH d.emotion " +
+                                "LEFT JOIN FETCH d.diaryTags dt " +
+                                "LEFT JOIN FETCH dt.tag " +
+                                "WHERE d.member.id = :memberId " +
+                                "AND FUNCTION('YEAR', d.date) = :year " +
+                                "AND FUNCTION('MONTH', d.date) = :month " +
+                                "ORDER BY d.createdAt ASC", Diary.class
+                )
+                .setParameter("memberId", memberId)
+                .setParameter("year", year)
+                .setParameter("month", month)
+                .getResultList();
+    }
+
+    /*
      * 특정 연&월의 일기 목록을 시간 기준으로 정렬하여 조회
      * - Image와 Emotion 포함 fetch
      * - 작성 순 정렬
