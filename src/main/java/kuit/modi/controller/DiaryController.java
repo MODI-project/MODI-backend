@@ -4,7 +4,6 @@ import kuit.modi.domain.Member;
 import kuit.modi.dto.diary.request.CreateDiaryRequest;
 import kuit.modi.dto.diary.request.UpdateDiaryRequest;
 import kuit.modi.dto.diary.response.*;
-import kuit.modi.exception.InvalidDateException;
 import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.service.DiaryQueryService;
 import kuit.modi.service.DiaryService;
@@ -17,8 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @RestController
@@ -89,20 +86,14 @@ public class DiaryController {
         return ResponseEntity.ok(response);
     }
 
-    //일기 날짜 기반 조회 (메인 + 이전/다음) -> 같은 날 일기가 하나만 있을 경우 이전/다음은 null로 반환
-    @GetMapping(params = "date")
-    public ResponseEntity<DailyDiaryDetailResponse> getDailyDiaryDetail(
+    // 일별 기록 조회용 월 전체 기록 응답
+    @GetMapping("/daily")
+    public ResponseEntity<DiaryAllResponse> getDailyDiaryDetail(
             @AuthenticationPrincipal Member member,
-            @RequestParam String date
+            @RequestParam int year,
+            @RequestParam int month
     ) {
-        LocalDate parsedDate;
-        try {
-            parsedDate = LocalDate.parse(date);
-        } catch (DateTimeParseException e) {
-            throw new InvalidDateException();
-        }
-
-        DailyDiaryDetailResponse response = diaryQueryService.getDailyDetail(parsedDate, member);
+        DiaryAllResponse response = diaryQueryService.getDailyDetailMonthly(year, month, member);
         return ResponseEntity.ok(response);
     }
 

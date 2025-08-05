@@ -72,10 +72,10 @@ public class OAuthController {
 
         ResponseCookie cookie = ResponseCookie.from("access_token", jwt)
                 .httpOnly(true)
-                .secure(!isLocal) // 로컬은 false, 배포는 true
+                .secure(true)
                 .path("/")
-                .sameSite(isLocal ? "Lax" : "None") // 로컬은 기본값, 배포는 cross-origin 허용
-                .maxAge(Duration.ofHours(1))
+                .sameSite("None")
+                .maxAge(Duration.ofHours(24))
                 .build();
 
         response.addHeader("Set-Cookie", cookie.toString());
