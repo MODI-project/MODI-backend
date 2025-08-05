@@ -28,7 +28,7 @@ public class AiUtilsService {
     }
 
     public List<String> extractLanguageStyle(LanguageStyleRequest request) {
-        String prompt = "다음 일기에 어울리는 감정 스타일을 3~4개 뽑아줘. 선택지는 '행복', '즐거움', '슬픔'과 같은 명사형으로 만들어줘. 일기 내용:\n" + request.getSummary();
+        String prompt = "다음 일기에 어울리는 감정 스타일을 3~4개 뽑아줘. 선택지는 '기쁨', '슬픔', '긴장감'과 같은 명사형으로 만들어줘. 일기 내용:\n" + request.getSummary();
         String response = openAiClient.ask(prompt);
 
         return Arrays.stream(response.split("\\r?\\n"))
