@@ -1,6 +1,7 @@
 package kuit.modi.dto.diary.response;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record DiaryHomeResponse(
@@ -9,5 +10,6 @@ public record DiaryHomeResponse(
         String photoUrl,
         String summary,
         String emotion,
-        List<String> tags
+        List<String> tags,
+        LocalDateTime created_at
 ) {}
