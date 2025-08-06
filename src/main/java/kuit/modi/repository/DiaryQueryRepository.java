@@ -251,4 +251,13 @@ public class DiaryQueryRepository {
                 .getResultList();
     }
 
+    public List<Diary> findByAddress(String address) {
+        return em.createQuery(
+                        "SELECT d FROM Diary d " +
+                                "LEFT JOIN FETCH d.image " +
+                                "LEFT JOIN FETCH d.location l " +
+                                "WHERE l.address LIKE CONCAT('%', :address, '%')", Diary.class)
+                .setParameter("address", address)
+                .getResultList();
+    }
 }
