@@ -4,6 +4,7 @@ import kuit.modi.domain.Member;
 import kuit.modi.dto.diary.request.CreateDiaryRequest;
 import kuit.modi.dto.diary.request.UpdateDiaryRequest;
 import kuit.modi.dto.diary.response.*;
+import kuit.modi.dto.reminder.DiaryReminderResponse;
 import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.service.DiaryQueryService;
 import kuit.modi.service.DiaryService;
@@ -156,13 +157,15 @@ public class DiaryController {
             @RequestParam double swLat,
             @RequestParam double swLng,
             @RequestParam double neLat,
-            @RequestParam double neLng) {
+            @RequestParam double neLng,
+            @AuthenticationPrincipal Member member) {
 
-        List<DiaryNearbyResponse> diaries = diaryQueryService.getNearbyDiaries(swLat, swLng, neLat, neLng);
+        List<DiaryNearbyResponse> diaries = diaryQueryService.getNearbyDiaries(swLat, swLng, neLat, neLng, member);
         return ResponseEntity.ok(diaries);
     }
 
-    // 리마인더 알림용 요청
+    // 리마인더 알림용 요청 - 반경 100m 기준
+    /*
     @GetMapping("/reminder")
     public ResponseEntity<List<DiaryReminderResponse>> getReminderDiaries(
             @RequestParam double latitude,
@@ -171,7 +174,7 @@ public class DiaryController {
         List<DiaryReminderResponse> response = diaryQueryService.getReminderDiaries(latitude, longitude);
         return ResponseEntity.ok(response);
     }
-
+    */
 }
 
 
