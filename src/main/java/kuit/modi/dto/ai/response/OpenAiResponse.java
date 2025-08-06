@@ -1,4 +1,4 @@
-package kuit.modi.dto.ai;
+package kuit.modi.dto.ai.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;

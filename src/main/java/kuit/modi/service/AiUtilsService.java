@@ -1,9 +1,9 @@
 package kuit.modi.service;
 
-import kuit.modi.dto.ai.AutoGenerateRequest;
-import kuit.modi.dto.ai.LanguageStyleRequest;
-import kuit.modi.dto.ai.StyledSummaryRequest;
-import kuit.modi.dto.ai.SummaryRequest;
+import kuit.modi.dto.ai.request.AutoGenerateRequest;
+import kuit.modi.dto.ai.request.LanguageStyleRequest;
+import kuit.modi.dto.ai.request.StyledSummaryRequest;
+import kuit.modi.dto.ai.request.SummaryRequest;
 import kuit.modi.openai.OpenAiClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
