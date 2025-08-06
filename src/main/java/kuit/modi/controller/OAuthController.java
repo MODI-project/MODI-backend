@@ -4,7 +4,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import kuit.modi.domain.CharacterType;
 import kuit.modi.domain.Member;
 import kuit.modi.dto.member.GoogleUserInfo;
-import kuit.modi.exception.NotFoundException;
+import kuit.modi.exception.CustomException;
+import kuit.modi.exception.MemberExceptionResponseStatus;
 import kuit.modi.repository.CharacterTypeRepository;
 import kuit.modi.repository.MemberRepository;
 import kuit.modi.service.GoogleOAuthService;
@@ -56,8 +57,8 @@ public class OAuthController {
         } else {
             // 기존 회원이 아니면 이메일만으로 임시 회원 생성
             isNew = true;
-            CharacterType momo = characterTypeRepository.findByName("Momo")
-                    .orElseThrow(() -> new NotFoundException("캐릭터 타입 'Momo'가 존재하지 않습니다"));
+            CharacterType momo = characterTypeRepository.findByName("momo")
+                    .orElseThrow(() -> new CustomException(MemberExceptionResponseStatus.INVALID_CHARACTER_TYPE));
 
             Member newMember = new Member(userInfo.email(), momo);
             member = memberRepository.save(newMember);
