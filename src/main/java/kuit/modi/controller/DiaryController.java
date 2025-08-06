@@ -4,6 +4,7 @@ import kuit.modi.domain.Member;
 import kuit.modi.dto.diary.request.CreateDiaryRequest;
 import kuit.modi.dto.diary.request.UpdateDiaryRequest;
 import kuit.modi.dto.diary.response.*;
+import kuit.modi.dto.reminder.DiaryReminderResponse;
 import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.service.DiaryQueryService;
 import kuit.modi.service.DiaryService;

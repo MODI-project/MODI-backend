@@ -7,6 +7,7 @@ import kuit.modi.dto.diary.response.DiaryDetailResponse.EmotionDto;
 import kuit.modi.dto.diary.response.DiaryDetailResponse.LocationDto;
 import kuit.modi.dto.diary.response.DiaryDetailResponse.TagDto;
 import kuit.modi.dto.diary.response.DiaryDetailResponse.ToneDto;
+import kuit.modi.dto.reminder.DiaryReminderResponse;
 import kuit.modi.exception.DiaryNotFoundException;
 import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.repository.DiaryQueryRepository;
