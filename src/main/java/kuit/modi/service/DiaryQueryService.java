@@ -7,6 +7,8 @@ import kuit.modi.dto.diary.response.DiaryDetailResponse.EmotionDto;
 import kuit.modi.dto.diary.response.DiaryDetailResponse.LocationDto;
 import kuit.modi.dto.diary.response.DiaryDetailResponse.TagDto;
 import kuit.modi.dto.diary.response.DiaryDetailResponse.ToneDto;
+import kuit.modi.exception.CustomException;
+import kuit.modi.exception.DiaryExceptionResponseStatus;
 import kuit.modi.exception.DiaryNotFoundException;
 import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.repository.DiaryQueryRepository;
@@ -68,13 +70,33 @@ public class DiaryQueryService {
     @Transactional(readOnly = true)
     public DiaryDetailResponse getDiaryDetail(Long diaryId, Member member) {
         Diary diary = diaryQueryRepository.findDetailById(diaryId)
-                .orElseThrow(DiaryNotFoundException::new);
+                .orElseThrow(() -> new CustomException(DiaryExceptionResponseStatus.DIARY_NOT_FOUND));
 
         if (!diary.getMember().getId().equals(member.getId())) {
-            throw new DiaryNotFoundException();
+            throw new CustomException(DiaryExceptionResponseStatus.DIARY_NOT_FOUND);
         }
 
         return toResponse(diary);
+    }
+
+    //특정 연/월에 해당하는 일기 목록 조회
+    @Transactional(readOnly = true)
+    public List<DiaryMonthlyItemResponse> getMonthlyDiaries(int year, int month, Member member) {
+        if (month < 1 || month > 12) {
+            throw new CustomException(DiaryExceptionResponseStatus.INVALID_YEAR_MONTH);
+        }
+
+        List<Diary> diaries = diaryQueryRepository.findByYearMonth(member.getId(), year, month);
+
+        return diaries.stream()
+                .map(diary -> new DiaryMonthlyItemResponse(
+                        diary.getId(),
+                        diary.getDate().toLocalDate(),
+                        diary.getImage() != null ? diary.getImage().getUrl() : null,
+                        diary.getEmotion().getName(),
+                        diary.getCreatedAt()
+                ))
+                .toList();
     }
 
     // Diary 엔티티 -> DiaryDetailResponse
@@ -117,9 +139,13 @@ public class DiaryQueryService {
         );
     }
 
-    //메인홈 일별보기 기능을 위한 월 전체 응답
+    // 메인홈 일별보기 기능을 위한 월 전체 응답
     @Transactional(readOnly = true)
     public DiaryAllResponse getDailyDetailMonthly(int year, int month, Member member) {
+        if (month < 1 || month > 12) {
+            throw new CustomException(DiaryExceptionResponseStatus.INVALID_YEAR_MONTH);
+        }
+
         List<Diary> diaries = diaryQueryRepository.findByYearMonthForDaily(member.getId(), year, month);
 
         List<DiaryHomeResponse> responses = diaries.stream()
@@ -127,61 +153,6 @@ public class DiaryQueryService {
                 .toList();
 
         return new DiaryAllResponse(responses);
-    }
-
-    private DailyDiaryDetailResponse.MainDiaryDto toMainDto(Diary diary) {
-        List<String> tags = diary.getDiaryTags().stream()
-                .map(dt -> dt.getTag().getName())
-                .limit(3)
-                .toList();
-
-        Long frameId = (diary.getStyle() != null && diary.getStyle().getFrame() != null)
-                ? diary.getStyle().getFrame().getId()
-                : null;
-
-        return new DailyDiaryDetailResponse.MainDiaryDto(
-                diary.getId(),
-                diary.getSummary(),
-                diary.getDate(),
-                diary.getImage() != null ? diary.getImage().getUrl() : null,
-                tags,
-                frameId
-        );
-    }
-
-    // 메인 화면 좌/우 일기 변환
-    private DailyDiaryDetailResponse.AdjacentDiaryDto toAdjacentDto(Diary diary) {
-        Long frameId = (diary.getStyle() != null && diary.getStyle().getFrame() != null)
-                ? diary.getStyle().getFrame().getId()
-                : null;
-
-        return new DailyDiaryDetailResponse.AdjacentDiaryDto(
-                diary.getId(),
-                diary.getSummary(),
-                diary.getCreatedAt(),
-                diary.getImage() != null ? diary.getImage().getUrl() : null,
-                frameId
-        );
-    }
-
-    //특정 연/월에 해당하는 일기 목록 조회
-    @Transactional(readOnly = true)
-    public List<DiaryMonthlyItemResponse> getMonthlyDiaries(int year, int month, Member member) {
-        if (month < 1 || month > 12) {
-            throw new InvalidYearMonthException();
-        }
-
-        List<Diary> diaries = diaryQueryRepository.findByYearMonth(member.getId(), year, month);
-
-        return diaries.stream()
-                .map(diary -> new DiaryMonthlyItemResponse(
-                        diary.getId(),
-                        diary.getDate().toLocalDate(),
-                        diary.getImage() != null ? diary.getImage().getUrl() : null,
-                        diary.getEmotion().getName(),
-                        diary.getCreatedAt()
-                ))
-                .toList();
     }
 
     //즐겨찾기한 일기 목록 조회
@@ -300,6 +271,41 @@ public class DiaryQueryService {
                         "https://cdn.modi.com/diary/" + diary.getId() + "/thumb.jpg"
                 ))
                 .collect(Collectors.toList());
+    }
+
+    private DailyDiaryDetailResponse.MainDiaryDto toMainDto(Diary diary) {
+        List<String> tags = diary.getDiaryTags().stream()
+                .map(dt -> dt.getTag().getName())
+                .limit(3)
+                .toList();
+
+        Long frameId = (diary.getStyle() != null && diary.getStyle().getFrame() != null)
+                ? diary.getStyle().getFrame().getId()
+                : null;
+
+        return new DailyDiaryDetailResponse.MainDiaryDto(
+                diary.getId(),
+                diary.getSummary(),
+                diary.getDate(),
+                diary.getImage() != null ? diary.getImage().getUrl() : null,
+                tags,
+                frameId
+        );
+    }
+
+    // 메인 화면 좌/우 일기 변환
+    private DailyDiaryDetailResponse.AdjacentDiaryDto toAdjacentDto(Diary diary) {
+        Long frameId = (diary.getStyle() != null && diary.getStyle().getFrame() != null)
+                ? diary.getStyle().getFrame().getId()
+                : null;
+
+        return new DailyDiaryDetailResponse.AdjacentDiaryDto(
+                diary.getId(),
+                diary.getSummary(),
+                diary.getCreatedAt(),
+                diary.getImage() != null ? diary.getImage().getUrl() : null,
+                frameId
+        );
     }
 
 }
