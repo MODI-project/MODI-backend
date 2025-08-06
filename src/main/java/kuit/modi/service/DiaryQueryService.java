@@ -9,8 +9,6 @@ import kuit.modi.dto.diary.response.DiaryDetailResponse.TagDto;
 import kuit.modi.dto.diary.response.DiaryDetailResponse.ToneDto;
 import kuit.modi.exception.CustomException;
 import kuit.modi.exception.DiaryExceptionResponseStatus;
-import kuit.modi.exception.DiaryNotFoundException;
-import kuit.modi.exception.InvalidYearMonthException;
 import kuit.modi.repository.DiaryQueryRepository;
 import kuit.modi.repository.TagRepository;
 import lombok.RequiredArgsConstructor;

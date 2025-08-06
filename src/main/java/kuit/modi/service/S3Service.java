@@ -2,6 +2,8 @@ package kuit.modi.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
+import kuit.modi.exception.CustomException;
+import kuit.modi.exception.S3ExceptionResponseStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -33,12 +35,12 @@ public class S3Service {
         try {
             amazonS3.putObject(new PutObjectRequest(bucketName, uniqueFilename, file.getInputStream(), metadata));
         } catch (IOException e) {
-            throw new RuntimeException("이미지 파일 업로드 진행 중 실패", e);
+            throw new CustomException(S3ExceptionResponseStatus.S3_UPLOAD_FAILED);
         }
 
         boolean exists = amazonS3.doesObjectExist(bucketName, uniqueFilename);
         if (!exists) {
-            throw new RuntimeException("S3 업로드 결과 실패 확인됨 (파일이 존재하지 않음)");
+            throw new CustomException(S3ExceptionResponseStatus.S3_UPLOAD_VERIFY_FAILED);
         }
 
         return getFileUrl(uniqueFilename);
@@ -60,7 +62,7 @@ public class S3Service {
 
             amazonS3.deleteObject(bucketName, decodedKey);
         } catch (Exception e) {
-            throw new RuntimeException("S3 삭제 실패", e);
+            throw new CustomException(S3ExceptionResponseStatus.S3_DELETE_FAILED);
         }
     }
 
