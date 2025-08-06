@@ -3,6 +3,7 @@ package kuit.modi.filter;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import kuit.modi.domain.Member;
@@ -31,13 +32,31 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        String token = null;
+
+        // 1. Authorization 헤더가 있을 경우
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+            token = authHeader.substring(7);
+        }
+
+        // 2. Authorization 헤더가 없고, 쿠키에서 access_token을 찾을 수 있을 경우
+        if (token == null) {
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("access_token".equals(cookie.getName())) {
+                        token = cookie.getValue();
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (token != null) {
             try {
                 Long userId = jwtService.parseUserId(token);
 
-                // 사용자 인증 토큰 생성
                 Member member = memberService.findById(userId)
                         .orElseThrow(() -> new RuntimeException("사용자 없음"));
 
