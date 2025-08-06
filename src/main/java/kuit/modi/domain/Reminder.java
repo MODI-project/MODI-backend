@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@RequiredArgsConstructor
 public class Reminder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
