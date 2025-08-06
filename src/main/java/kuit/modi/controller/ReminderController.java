@@ -23,12 +23,10 @@ public class ReminderController {
         List<DiaryReminderResponse> reminders = reminderService.getRemindersByAddress(address);
         return ResponseEntity.ok(reminders);
     }
-/*
+
     @GetMapping("/recent")
     public ResponseEntity<List<RecentReminderResponse>> getRecentReminders() {
-        List<RecentReminderResponse> response = reminderService.getRecentReminders();
-        return ResponseEntity.ok(response);
+        List<RecentReminderResponse> reminders = reminderService.getRecentReminders();
+        return ResponseEntity.ok(reminders);
     }
-
- */
 }
