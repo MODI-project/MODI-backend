@@ -1,6 +1,5 @@
-package kuit.modi.dto.ai;
+package kuit.modi.dto.ai.request;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 

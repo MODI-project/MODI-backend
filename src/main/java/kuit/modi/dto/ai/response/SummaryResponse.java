@@ -1,4 +1,4 @@
-package kuit.modi.dto.ai;
+package kuit.modi.dto.ai.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

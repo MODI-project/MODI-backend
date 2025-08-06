@@ -1,6 +1,12 @@
 package kuit.modi.controller;
 
-import kuit.modi.dto.ai.*;
+import kuit.modi.dto.ai.request.AutoGenerateRequest;
+import kuit.modi.dto.ai.request.LanguageStyleRequest;
+import kuit.modi.dto.ai.request.StyledSummaryRequest;
+import kuit.modi.dto.ai.request.SummaryRequest;
+import kuit.modi.dto.ai.response.AutoGenerateResponse;
+import kuit.modi.dto.ai.response.LanguageStyleResponse;
+import kuit.modi.dto.ai.response.SummaryResponse;
 import kuit.modi.service.AiUtilsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,6 +1,6 @@
 package kuit.modi.openai;
 
-import kuit.modi.dto.ai.OpenAiResponse;
+import kuit.modi.dto.ai.response.OpenAiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
