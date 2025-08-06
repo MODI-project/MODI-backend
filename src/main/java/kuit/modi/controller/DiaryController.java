@@ -157,9 +157,10 @@ public class DiaryController {
             @RequestParam double swLat,
             @RequestParam double swLng,
             @RequestParam double neLat,
-            @RequestParam double neLng) {
+            @RequestParam double neLng,
+            @AuthenticationPrincipal Member member) {
 
-        List<DiaryNearbyResponse> diaries = diaryQueryService.getNearbyDiaries(swLat, swLng, neLat, neLng);
+        List<DiaryNearbyResponse> diaries = diaryQueryService.getNearbyDiaries(swLat, swLng, neLat, neLng, member);
         return ResponseEntity.ok(diaries);
     }
 
