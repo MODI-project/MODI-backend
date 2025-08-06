@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-//일기 조회 전용 서비스:wq
+//일기 조회 전용 서비스
 @Service
 @RequiredArgsConstructor
 public class DiaryQueryService {
