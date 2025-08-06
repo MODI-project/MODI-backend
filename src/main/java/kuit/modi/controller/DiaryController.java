@@ -163,7 +163,8 @@ public class DiaryController {
         return ResponseEntity.ok(diaries);
     }
 
-    // 리마인더 알림용 요청
+    // 리마인더 알림용 요청 - 반경 100m 기준
+    /*
     @GetMapping("/reminder")
     public ResponseEntity<List<DiaryReminderResponse>> getReminderDiaries(
             @RequestParam double latitude,
@@ -172,7 +173,7 @@ public class DiaryController {
         List<DiaryReminderResponse> response = diaryQueryService.getReminderDiaries(latitude, longitude);
         return ResponseEntity.ok(response);
     }
-
+    */
 }
 
 

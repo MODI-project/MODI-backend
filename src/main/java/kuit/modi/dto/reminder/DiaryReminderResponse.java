@@ -11,4 +11,5 @@ public class DiaryReminderResponse {
     private Long id;
     private LocalDateTime datetime;
     private String thumbnailUrl;
+    private LocalDateTime created_at;
 }
