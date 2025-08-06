@@ -1,10 +1,11 @@
 package kuit.modi.service;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import kuit.modi.domain.CharacterType;
 import kuit.modi.domain.Member;
 import kuit.modi.dto.member.MemberRequest;
+import kuit.modi.exception.CustomException;
+import kuit.modi.exception.MemberExceptionResponseStatus;
 import kuit.modi.repository.CharacterTypeRepository;
 import kuit.modi.repository.DiaryRepository;
 import kuit.modi.repository.MemberRepository;
@@ -22,10 +23,10 @@ public class MemberService {
 
     public Member update(Long memberId, MemberRequest request) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(MemberExceptionResponseStatus.MEMBER_NOT_FOUND));
 
         CharacterType characterType = characterTypeRepository.findByName(request.getCharacter())
-                .orElseThrow(() -> new IllegalArgumentException("잘못된 캐릭터 유형입니다."));
+                .orElseThrow(() -> new CustomException(MemberExceptionResponseStatus.INVALID_CHARACTER_TYPE));
 
         member.setNickname(request.getNickname());
         member.setCharacterType(characterType);
@@ -40,12 +41,11 @@ public class MemberService {
     @Transactional
     public void deleteById(Long memberId) {
         if (!memberRepository.existsById(memberId)) {
-            throw new EntityNotFoundException("회원을 찾을 수 없습니다.");
+            throw new CustomException(MemberExceptionResponseStatus.MEMBER_NOT_FOUND);
         }
 
         // 해당 멤버가 작성한 일기 모두 삭제 후 멤버 삭제
         diaryRepository.deleteAllByMemberId(memberId);
         memberRepository.deleteById(memberId);
     }
-
 }
