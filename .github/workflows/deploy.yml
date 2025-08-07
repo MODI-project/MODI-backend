@@ -16,6 +16,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
+          timeout: 1200
           script: |
             cd ~/MODI-backend
             git pull origin main
