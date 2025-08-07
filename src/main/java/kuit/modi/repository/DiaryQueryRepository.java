@@ -3,6 +3,7 @@ package kuit.modi.repository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import kuit.modi.domain.Diary;
+import kuit.modi.domain.Member;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -208,23 +209,27 @@ public class DiaryQueryRepository {
      * 지도 범위 내 위/경도(lat/lng)에 해당하는 일기 목록 조회
      * - Location 포함 fetch
      */
-    public List<Diary> findNearbyDiaries(double swLat, double swLng, double neLat, double neLng) {
+    public List<Diary> findNearbyDiaries(Long memberId, double swLat, double swLng, double neLat, double neLng) {
         return em.createQuery(
                         "SELECT DISTINCT d FROM Diary d " +
                                 "JOIN FETCH d.location l " +
                                 "LEFT JOIN FETCH d.emotion " +
                                 "LEFT JOIN FETCH d.image " +
                                 "WHERE l.latitude BETWEEN :swLat AND :neLat " +
-                                "AND l.longitude BETWEEN :swLng AND :neLng", Diary.class)
+                                "AND l.longitude BETWEEN :swLng AND :neLng " +
+                                "AND d.member.id = :memberId", Diary.class)
                 .setParameter("swLat", swLat)
                 .setParameter("neLat", neLat)
                 .setParameter("swLng", swLng)
                 .setParameter("neLng", neLng)
+                .setParameter("memberId", memberId)
                 .getResultList();
     }
 
     /*
      * 지정한 위도/경도 기준 반경 m 이내의 일기를 조회 (Location 포함)
+     * member에 대한 처리 안함
+     * 현재 사용X
      */
     public List<Diary> findDiariesWithinRadius(double latitude, double longitude, double radiusInMeters) {
         // 위도/경도 기준 100m 범위 내 사각형 영역으로 계산
@@ -250,5 +255,4 @@ public class DiaryQueryRepository {
                 .setParameter("maxLng", maxLng)
                 .getResultList();
     }
-
 }

@@ -4,7 +4,9 @@ import kuit.modi.domain.Member;
 import kuit.modi.dto.diary.request.CreateDiaryRequest;
 import kuit.modi.dto.diary.request.UpdateDiaryRequest;
 import kuit.modi.dto.diary.response.*;
-import kuit.modi.exception.InvalidYearMonthException;
+import kuit.modi.dto.reminder.DiaryReminderResponse;
+import kuit.modi.exception.CustomException;
+import kuit.modi.exception.DiaryExceptionResponseStatus;
 import kuit.modi.service.DiaryQueryService;
 import kuit.modi.service.DiaryService;
 import lombok.RequiredArgsConstructor;
@@ -104,14 +106,14 @@ public class DiaryController {
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer month
     ) {
-        if (year != null && month != null) {
-            List<DiaryMonthlyItemResponse> diaries = diaryQueryService.getMonthlyDiaries(year, month, member);
-            return ResponseEntity.ok(diaries);
+        if (year == null || month == null) {
+            throw new CustomException(DiaryExceptionResponseStatus.INVALID_YEAR_MONTH);
         }
 
-        // 다른 GET 쿼리(예: ?date=2025-07-17)와 구분이 필요하다면 여기에 분기 추가
-        throw new InvalidYearMonthException(); // 예시
+        List<DiaryMonthlyItemResponse> diaries = diaryQueryService.getMonthlyDiaries(year, month, member);
+        return ResponseEntity.ok(diaries);
     }
+
 
     // 즐겨찾기한 일기 목록 조회
     @GetMapping("/favorites")
@@ -156,13 +158,15 @@ public class DiaryController {
             @RequestParam double swLat,
             @RequestParam double swLng,
             @RequestParam double neLat,
-            @RequestParam double neLng) {
+            @RequestParam double neLng,
+            @AuthenticationPrincipal Member member) {
 
-        List<DiaryNearbyResponse> diaries = diaryQueryService.getNearbyDiaries(swLat, swLng, neLat, neLng);
+        List<DiaryNearbyResponse> diaries = diaryQueryService.getNearbyDiaries(swLat, swLng, neLat, neLng, member);
         return ResponseEntity.ok(diaries);
     }
 
-    // 리마인더 알림용 요청
+    // 리마인더 알림용 요청 - 반경 100m 기준
+    /*
     @GetMapping("/reminder")
     public ResponseEntity<List<DiaryReminderResponse>> getReminderDiaries(
             @RequestParam double latitude,
@@ -171,7 +175,7 @@ public class DiaryController {
         List<DiaryReminderResponse> response = diaryQueryService.getReminderDiaries(latitude, longitude);
         return ResponseEntity.ok(response);
     }
-
+    */
 }
 
 

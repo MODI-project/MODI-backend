@@ -1,4 +1,4 @@
-package kuit.modi.dto.diary.response;
+package kuit.modi.dto.reminder;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,4 +11,5 @@ public class DiaryReminderResponse {
     private Long id;
     private LocalDateTime datetime;
     private String thumbnailUrl;
+    private LocalDateTime created_at;
 }
