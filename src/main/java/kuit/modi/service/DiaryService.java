@@ -4,7 +4,8 @@ import jakarta.transaction.Transactional;
 import kuit.modi.domain.*;
 import kuit.modi.dto.diary.request.CreateDiaryRequest;
 import kuit.modi.dto.diary.request.UpdateDiaryRequest;
-import kuit.modi.exception.NotFoundException;
+import kuit.modi.exception.CustomException;
+import kuit.modi.exception.DiaryExceptionResponseStatus;
 import kuit.modi.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ public class DiaryService {
         LocalDateTime now = LocalDateTime.now();
 
         Emotion emotion = emotionRepository.findByName(request.emotion())
-                .orElseThrow(() -> new IllegalArgumentException("감정 정보가 유효하지 않습니다."));
+                .orElseThrow(() -> new CustomException(DiaryExceptionResponseStatus.INVALID_EMOTION));
 
         Tone tone = toneRepository.findByName(request.tone()) // 톤 정보 없을 시 생성
                 .orElseGet(() -> {
@@ -42,7 +43,7 @@ public class DiaryService {
                 });
 
         Frame frame = frameRepository.findByName(request.frame())
-                .orElseThrow(() -> new IllegalArgumentException("프레임 정보가 유효하지 않습니다."));
+                .orElseThrow(() -> new CustomException(DiaryExceptionResponseStatus.INVALID_FRAME));
 
         Location location = locationRepository.findByAddress(request.address()) // 위치 정보 없을 시 생성
                 .orElseGet(() -> {
@@ -51,64 +52,53 @@ public class DiaryService {
                 });
 
         Diary diary = Diary.create(
-                request.content(),
-                request.summary(),
-                null,
-                parsedDate,
-                member,
-                emotion,
-                tone,
-                location,
-                now,
-                now
+                request.content(), request.summary(), null,
+                parsedDate, member, emotion, tone, location,
+                now, now
         );
 
         // Style 생성 (Frame은 엔티티로 전달)
-        Style style = Style.create(request.font(), diary, frame);
-        diary.setStyle(style);
+        diary.setStyle(Style.create(request.font(), diary, frame));
 
         if (imageFile != null && !imageFile.isEmpty()) {
-            String imageUrl = s3Service.uploadFile(imageFile);
-            Image image = Image.create(imageUrl, diary); // S3 URL 저장
-            diary.setImage(image);
+            String imageUrl = s3Service.uploadFile(imageFile); // S3 URL 저장
+            diary.setImage(Image.create(imageUrl, diary));
         }
 
         List<Tag> tags = request.tags().stream()
                 .map(tagName -> tagRepository.findByName(tagName)
-                        .orElseGet(() -> tagRepository.save(Tag.create(tagName)))
-                )
+                        .orElseGet(() -> tagRepository.save(Tag.create(tagName))))
                 .toList();
 
-        List<DiaryTag> diaryTags = tags.stream()
+        diary.getDiaryTags().addAll(tags.stream()
                 .map(tag -> DiaryTag.create(diary, tag))
-                .toList();
+                .toList());
 
-        diary.getDiaryTags().addAll(diaryTags);
         return diaryRepository.save(diary).getId();
     }
 
     @Transactional
     public void updateDiary(Long diaryId, UpdateDiaryRequest request, MultipartFile imageFile) {
         Diary diary = diaryRepository.findById(diaryId)
-                .orElseThrow(() -> new NotFoundException("기록을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(DiaryExceptionResponseStatus.DIARY_NOT_FOUND));
 
         diary.setContent(request.content());
         diary.setSummary(request.summary());
-        diary.setSummary_toned(null); // Todo 언어스타일 적용된 요약본은 지금은 null로 넣어놨어요!
+        diary.setSummary_toned(null);
         diary.setDate(LocalDateTime.parse(request.date()));
         diary.setUpdatedAt(LocalDateTime.now());
 
-        diary.setEmotion(emotionRepository.findByName(request.emotion())
-                .orElseThrow(() -> new IllegalArgumentException("감정 정보가 유효하지 않습니다.")));
-        diary.setTone(toneRepository.findByName(request.tone())
-                .orElseThrow(() -> new IllegalArgumentException("톤 정보가 유효하지 않습니다.")));
+        Emotion emotion = emotionRepository.findByName(request.emotion())
+                .orElseThrow(() -> new CustomException(DiaryExceptionResponseStatus.INVALID_EMOTION));
+        diary.setEmotion(emotion);
 
-        Location location = locationRepository
-                .findByAddressAndLatitudeAndLongitude(request.address(), request.latitude(), request.longitude())
-                .orElseGet(() -> {
-                    Location newLocation = Location.create(request.address(), request.latitude(), request.longitude());
-                    return locationRepository.save(newLocation);
-                });
+        Tone tone = toneRepository.findByName(request.tone())
+                .orElseThrow(() -> new CustomException(DiaryExceptionResponseStatus.INVALID_TONE));
+        diary.setTone(tone);
+
+        Location location = locationRepository.findByAddressAndLatitudeAndLongitude(
+                        request.address(), request.latitude(), request.longitude())
+                .orElseGet(() -> locationRepository.save(Location.create(request.address(), request.latitude(), request.longitude())));
         diary.setLocation(location);
 
         // 기존 DiaryTag 제거
@@ -131,7 +121,6 @@ public class DiaryService {
 
         if (imageFile != null && !imageFile.isEmpty()) {
             String newUrl = s3Service.uploadFile(imageFile); // S3에 새 이미지 등록
-
             if (diary.getImage() != null) {
                 String oldUrl = diary.getImage().getUrl();  // 기존 URL 먼저 보관
                 s3Service.deleteFileFromUrl(oldUrl);        // S3에서 기존 이미지 삭제
@@ -141,11 +130,10 @@ public class DiaryService {
                 diary.setImage(newImage);
             }
         }
-        
+
         if (request.frame() != null) {
             Frame frame = frameRepository.findById(request.frame())
-                    .orElseThrow(() -> new IllegalArgumentException("프레임 정보가 유효하지 않습니다."));
-
+                    .orElseThrow(() -> new CustomException(DiaryExceptionResponseStatus.INVALID_FRAME));
             Style style = diary.getStyle();
             style.setFont(request.font());
             style.setFrame(frame);
@@ -155,24 +143,22 @@ public class DiaryService {
     @Transactional
     public void updateFavorite(Long diaryId, boolean favorite) {
         Diary diary = diaryRepository.findById(diaryId)
-                .orElseThrow(() -> new NotFoundException("해당 일기를 찾을 수 없습니다."));
-
+                .orElseThrow(() -> new CustomException(DiaryExceptionResponseStatus.DIARY_NOT_FOUND));
         diary.setFavorite(favorite);
     }
 
     @Transactional
     public void deleteDiary(Long diaryId) {
         Diary diary = diaryRepository.findById(diaryId)
-                .orElseThrow(() -> new NotFoundException("해당 기록을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(DiaryExceptionResponseStatus.DIARY_NOT_FOUND));
 
         // S3에서 이미지 먼저 삭제
         if (diary.getImage() != null) {
-            String url = diary.getImage().getUrl();
-            s3Service.deleteFileFromUrl(url);
+            s3Service.deleteFileFromUrl(diary.getImage().getUrl());
         }
-
         // 연관된 Image 엔티티는 cascade로 DB에서 자동 삭제됨
         diaryRepository.delete(diary);
     }
+
 
 }
