@@ -29,16 +29,19 @@ jobs:
             git clean -fd
 
             echo "==> 기존 컨테이너/이미지 정리"
-            docker compose down || docker-compose down || true
+            docker-compose down || true
             docker images -f "dangling=true" -q | xargs -r docker rmi -f
             docker images "modi-backend-app" -q | xargs -r docker rmi -f
+
+            echo "==> Gradle 실행권한 부여"
+            chmod +x ./gradlew
 
             echo "==> Gradle 클린 빌드 (테스트 생략)"
             ./gradlew clean bootJar -x test --refresh-dependencies
 
             echo "==> 도커 캐시 없이 재빌드/재기동"
-            docker compose build --no-cache || docker-compose build --no-cache
-            docker compose up -d --force-recreate || docker-compose up -d --force-recreate
+            docker-compose build --no-cache
+            docker-compose up -d --force-recreate
 
             echo "==> 빌드 산출물/이미지에 v1 흔적 없는지 검사"
             grep -R "import com.amazonaws" -n src/main/java || true
