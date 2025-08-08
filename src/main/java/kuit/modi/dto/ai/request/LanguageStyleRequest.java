@@ -8,5 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LanguageStyleRequest {
+    private String emotion;
     private String summary;
 }
