@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LanguageStyleRequest {
     private String emotion;
-    private String summary;
+    private String content;
 }

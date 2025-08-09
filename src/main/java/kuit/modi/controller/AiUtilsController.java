@@ -1,5 +1,6 @@
 package kuit.modi.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import kuit.modi.dto.ai.request.AutoGenerateRequest;
 import kuit.modi.dto.ai.request.LanguageStyleRequest;
 import kuit.modi.dto.ai.request.StyledSummaryRequest;
@@ -36,9 +37,9 @@ public class AiUtilsController {
     }
 
     @PostMapping("/language-style")
-    public ResponseEntity<LanguageStyleResponse> languageStyle(@RequestBody LanguageStyleRequest request) {
-        List<String> styles = aiUtilsService.extractLanguageStyle(request);
-        return ResponseEntity.ok(new LanguageStyleResponse(styles));
+    public ResponseEntity<LanguageStyleResponse> languageStyle(@RequestBody LanguageStyleRequest request) throws JsonProcessingException {
+        LanguageStyleResponse response = aiUtilsService.extractLanguageStyle(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/summary/styled")
