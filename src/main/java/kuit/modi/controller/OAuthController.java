@@ -10,14 +10,18 @@ import kuit.modi.repository.CharacterTypeRepository;
 import kuit.modi.repository.MemberRepository;
 import kuit.modi.service.GoogleOAuthService;
 import kuit.modi.service.JwtService;
+import kuit.modi.service.TempTokenStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,6 +31,7 @@ public class OAuthController {
     private final JwtService jwtService;
     private final MemberRepository memberRepository;
     private final CharacterTypeRepository characterTypeRepository;
+    private final TempTokenStore tempTokenStore;
 
     @Value("${app.mode}")
     private String mode;
@@ -39,13 +44,14 @@ public class OAuthController {
 
     @GetMapping("/authorize/google")
     public void redirectToGoogle(HttpServletResponse response) throws IOException {
+        System.out.println("authorize 요청 받음");
         String redirectUrl = googleOAuthService.getGoogleLoginUrl();
         response.sendRedirect(redirectUrl);
     }
 
     @GetMapping("/callback/google")
     public void handleGoogleCallback(@RequestParam String code, HttpServletResponse response) throws IOException {
-        //System.out.println("/callback/google 요청 받음");
+        System.out.println("callback 응답 받음");
         String accessToken = googleOAuthService.getAccessToken(code);
         GoogleUserInfo userInfo = googleOAuthService.getUserInfo(accessToken);
         Optional<Member> existingMemberOpt = memberRepository.findByEmail(userInfo.email());
@@ -64,27 +70,40 @@ public class OAuthController {
             member = memberRepository.save(newMember);
         }
 
-        // jwt 생성
+        // JWT 생성 후 임시 저장
         String jwt = jwtService.createToken(member.getId());
         System.out.println(jwt);
+
+        String key = UUID.randomUUID().toString();
+        tempTokenStore.save(key, jwt);
 
         // 환경에 따른 분기 처리
         boolean isLocal = mode.equalsIgnoreCase("local");
 
-        ResponseCookie cookie = ResponseCookie.from("access_token", jwt)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .sameSite("None")
-                .maxAge(Duration.ofHours(24))
-                .build();
-
-        response.addHeader("Set-Cookie", cookie.toString());
-
         // 리디렉션 URL 설정
         String baseRedirect = isLocal ? localRedirectBase : prodRedirectBase;
-        String redirectUrl = baseRedirect + (isNew ? "/information-setting" : "/home");
+        String redirectUrl = baseRedirect + (isNew ? "/information-setting" : "/home") + "?code=" + key;
 
         response.sendRedirect(redirectUrl);
     }
+
+    @PostMapping("/set-cookie")
+    public ResponseEntity<Void> setCookie(@RequestBody Map<String, String> body, HttpServletResponse response) {
+        String code = body.get("code");
+        String jwt = tempTokenStore.get(code);
+
+        ResponseCookie cookie = ResponseCookie.from("access_token", jwt)
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("None")
+                .path("/")
+                .maxAge(Duration.ofHours(1))
+                .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
+        tempTokenStore.get(code);
+
+        return ResponseEntity.ok().build();
+    }
 }
+
