@@ -97,7 +97,7 @@ public class OAuthController {
                 .secure(true)
                 .sameSite("None")
                 .path("/")
-                .maxAge(Duration.ofHours(1))
+                .maxAge(Duration.ofHours(24))
                 .build();
 
         response.addHeader("Set-Cookie", cookie.toString());
