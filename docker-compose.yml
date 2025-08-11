@@ -22,6 +22,8 @@ services:
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
 
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+
       # --- JVM 안정화(권장) ---
       JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m -XX:-UseContainerSupport"
       TZ: Asia/Seoul
