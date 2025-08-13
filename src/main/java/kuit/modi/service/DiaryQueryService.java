@@ -10,14 +10,17 @@ import kuit.modi.dto.diary.response.DiaryDetailResponse.ToneDto;
 import kuit.modi.exception.CustomException;
 import kuit.modi.exception.DiaryExceptionResponseStatus;
 import kuit.modi.repository.DiaryQueryRepository;
+import kuit.modi.repository.DiaryTagRepository;
 import kuit.modi.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,10 +28,13 @@ import java.time.LocalDateTime;
 //일기 조회 전용 서비스
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DiaryQueryService {
 
     private final DiaryQueryRepository diaryQueryRepository;
+    private final DiaryTagRepository diaryTagRepository;
     private final TagRepository tagRepository;
+    private final S3Service s3Service;
 
     @Transactional(readOnly = true)
     public DiaryAllResponse getDiaryAll(Member member) {
@@ -42,7 +48,9 @@ public class DiaryQueryService {
     }
 
     private DiaryHomeResponse toHomeResponse(Diary diary) {
-        String photoUrl = diary.getImage() != null ? diary.getImage().getUrl() : null;
+        String photoUrl = diary.getImage() != null
+                ? s3Service.getFileUrl(diary.getImage().getUrl())
+                : null;
         String emotion = diary.getEmotion() != null ? diary.getEmotion().getName() : null;
 
         List<String> tags = diary.getDiaryTags().stream()
@@ -90,7 +98,7 @@ public class DiaryQueryService {
                 .map(diary -> new DiaryMonthlyItemResponse(
                         diary.getId(),
                         diary.getDate().toLocalDate(),
-                        diary.getImage() != null ? diary.getImage().getUrl() : null,
+                        diary.getImage() != null ? s3Service.getFileUrl(diary.getImage().getUrl()) : null,
                         diary.getEmotion().getName(),
                         diary.getCreatedAt()
                 ))
@@ -112,7 +120,7 @@ public class DiaryQueryService {
         );
 
         List<String> imageUrls = diary.getImage() != null
-                ? List.of(diary.getImage().getUrl())
+                ? List.of(s3Service.getFileUrl(diary.getImage().getUrl()))
                 : List.of();
 
         String font = diary.getStyle() == null ? null : diary.getStyle().getFont();
@@ -162,7 +170,7 @@ public class DiaryQueryService {
                 .map(diary -> new FavoriteDiaryItemResponse(
                         diary.getId(),
                         diary.getDate().toLocalDate(),
-                        diary.getImage() != null ? diary.getImage().getUrl() : null,
+                        diary.getImage() != null ? s3Service.getFileUrl(diary.getImage().getUrl()) : null,
                         diary.getCreatedAt()
                 ))
                 .toList();
@@ -207,24 +215,71 @@ public class DiaryQueryService {
     }
 
     @Transactional(readOnly = true)
-    public List<DiaryTagSearchItemResponse> getDiariesByTag(Long tagId, Member member) {
+    public List<DiaryTagSearchItemResponse> getDiariesByTagName(String rawTagName, Member member) {
         Long memberId = member.getId();
 
-        // (날짜, 이미지 URL) 튜플 리스트
-        List<Object[]> rawResults = diaryQueryRepository.findByTagIdWithImage(memberId, tagId);
+        // 0) tagName 정규화: URL 디코딩 + trim + 앞의 '#' 제거 + 중간의 이중공백 정리
+        String tagName = normalizeTagName(rawTagName);
+        if (tagName.isBlank()) return List.of();
 
-        // 날짜 기준 그룹
-        Map<LocalDate, List<String>> grouped = rawResults.stream()
-                .collect(Collectors.groupingBy(
-                        obj -> ((LocalDateTime) obj[0]).toLocalDate(),
-                        TreeMap::new, // 정렬된 Map 유지
-                        Collectors.mapping(obj -> (String) obj[1], Collectors.toList())
-                ));
+        // 1) 한 방 EXISTS 조회
+        List<Object[]> rows = diaryQueryRepository.findByMemberAndTagNameWithImage(memberId, tagName);
 
-        // 그룹된 데이터 DTO로 변환
-        return grouped.entrySet().stream()
-                .map(entry -> new DiaryTagSearchItemResponse(entry.getKey(), entry.getValue()))
-                .toList();
+        // 2) 날짜 → 일기 → 이미지 리스트
+        Map<LocalDate, Map<Long, List<String>>> byDate = new TreeMap<>();
+        for (Object[] r : rows) {
+            Long diaryId = (Long) r[0];
+
+            LocalDate date;
+            Object dateObj = r[1];
+            if (dateObj instanceof LocalDate ld) date = ld;
+            else if (dateObj instanceof LocalDateTime ldt) date = ldt.toLocalDate();
+            else throw new IllegalStateException("Unsupported date type: " + (dateObj == null ? "null" : dateObj.getClass()));
+
+            String keyOrUrl = (String) r[2];
+
+            byDate.computeIfAbsent(date, d -> new LinkedHashMap<>())
+                    .computeIfAbsent(diaryId, id -> new ArrayList<>())
+                    .add(keyOrUrl);
+        }
+
+        // 3) DTO 변환 (S3 key면 presign)
+        List<DiaryTagSearchItemResponse> result = new ArrayList<>();
+        for (Map.Entry<LocalDate, Map<Long, List<String>>> e : byDate.entrySet()) {
+            LocalDate date = e.getKey();
+            List<DiaryImageGroupResponse> groups = e.getValue().entrySet().stream()
+                    .map(entry -> {
+                        Long id = entry.getKey();
+                        List<String> urls = entry.getValue().stream()
+                                .filter(Objects::nonNull)
+                                .map(v -> isUrl(v) ? v : s3Service.getFileUrl(v))
+                                .collect(Collectors.toList());
+                        return new DiaryImageGroupResponse(id, urls);
+                    })
+                    .toList();
+            result.add(new DiaryTagSearchItemResponse(date, groups));
+        }
+
+        // 디버그 로그 (필요하면 살리고, 끝나면 제거)
+        log.info("tagName='{}' memberId={} -> dates={}, rows={}",
+                tagName, memberId, result.size(), rows.size());
+
+        return result;
+    }
+
+    private String normalizeTagName(String s) {
+        if (s == null) return "";
+        String dec = URLDecoder.decode(s, StandardCharsets.UTF_8);
+        dec = dec.trim();
+        if (dec.startsWith("#")) dec = dec.substring(1); // DB가 # 없이 저장돼 있으면 필수
+        // 필요시 추가 정규화: dec = dec.replaceAll("\\s+", " ");
+        return dec;
+    }
+
+    private boolean isUrl(String v) {
+        if (v == null) return false;
+        String s = v.toLowerCase(Locale.ROOT);
+        return s.startsWith("http://") || s.startsWith("https://");
     }
 
     public List<String> getPopularTags() {
@@ -238,7 +293,7 @@ public class DiaryQueryService {
         return diaries.stream()
                 .map(diary -> {
                     String thumbnailUrl = (diary.getImage() != null && diary.getImage().getUrl() != null)
-                            ? diary.getImage().getUrl()
+                            ? s3Service.getFileUrl(diary.getImage().getUrl())
                             : "https://cdn.modi.com/default-thumb.jpg";
 
                     return new DiaryNearbyResponse(
@@ -271,7 +326,7 @@ public class DiaryQueryService {
                 diary.getId(),
                 diary.getSummary(),
                 diary.getDate(),
-                diary.getImage() != null ? diary.getImage().getUrl() : null,
+                diary.getImage() != null ? s3Service.getFileUrl(diary.getImage().getUrl()) : null,
                 tags,
                 frameId
         );
@@ -287,7 +342,7 @@ public class DiaryQueryService {
                 diary.getId(),
                 diary.getSummary(),
                 diary.getCreatedAt(),
-                diary.getImage() != null ? diary.getImage().getUrl() : null,
+                diary.getImage() != null ? s3Service.getFileUrl(diary.getImage().getUrl()) : null,
                 frameId
         );
     }
