@@ -19,5 +19,5 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
     ORDER BY COUNT(t.name) DESC
     """)
     List<String> findTopTagNames(Pageable pageable);
-
+    Optional<Tag> findByNameIgnoreCase(String name);
 }

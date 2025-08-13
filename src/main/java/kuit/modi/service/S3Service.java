@@ -12,11 +12,16 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.UUID;
 
 @Service
@@ -24,6 +29,7 @@ import java.util.UUID;
 public class S3Service {
 
     private final S3Client s3Client;
+    private final S3Presigner s3Presigner; // ★ 추가
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
@@ -31,10 +37,12 @@ public class S3Service {
     @Value("${cloud.aws.region.static}")
     private String region;
 
+    public record UploadResult(String key, String url) {}
+
     // 파일 업로드
-    public String uploadFile(MultipartFile file) {
+    public UploadResult uploadFile(MultipartFile file) {
         String originalFilename = file.getOriginalFilename();
-        String uniqueFilename = UUID.randomUUID() + "_" + originalFilename;
+        String uniqueFilename = UUID.randomUUID() + "_" + (originalFilename == null ? "file" : originalFilename);
 
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucketName)
@@ -48,31 +56,44 @@ public class S3Service {
             throw new CustomException(S3ExceptionResponseStatus.S3_UPLOAD_FAILED);
         }
 
-        boolean exists;
         try {
             s3Client.headObject(HeadObjectRequest.builder()
                     .bucket(bucketName)
                     .key(uniqueFilename)
                     .build());
-            exists = true;
         } catch (S3Exception e) {
-            if (e.statusCode() == 404) {
-                exists = false;
-            } else {
-                throw new CustomException(S3ExceptionResponseStatus.S3_UPLOAD_VERIFY_FAILED);
-            }
-        }
-
-        if (!exists) {
             throw new CustomException(S3ExceptionResponseStatus.S3_UPLOAD_VERIFY_FAILED);
         }
+        String presignedUrl = getFileUrl(uniqueFilename);
 
-        return getFileUrl(uniqueFilename);
+        return new UploadResult(uniqueFilename, presignedUrl);
     }
 
-    // 파일 URL 반환
+    // 파일 URL 반환 (프리사인드 GET URL)
     public String getFileUrl(String fileName) {
-        return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + fileName;
+        GetObjectRequest getReq = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(fileName)
+                .build();
+
+        GetObjectPresignRequest presignReq = GetObjectPresignRequest.builder()
+                .getObjectRequest(getReq)
+                .signatureDuration(Duration.ofMinutes(30))
+                .build();
+
+        PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(presignReq);
+        return presigned.url().toString();
+    }
+
+    public void deleteByKey(String key) {
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .build());
+        } catch (Exception e) {
+            throw new CustomException(S3ExceptionResponseStatus.S3_DELETE_FAILED);
+        }
     }
 
     public void deleteFileFromUrl(String url) {
