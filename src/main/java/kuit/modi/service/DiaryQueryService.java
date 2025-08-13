@@ -29,6 +29,7 @@ public class DiaryQueryService {
 
     private final DiaryQueryRepository diaryQueryRepository;
     private final TagRepository tagRepository;
+    private final S3Service s3Service;
 
     @Transactional(readOnly = true)
     public DiaryAllResponse getDiaryAll(Member member) {
@@ -42,7 +43,9 @@ public class DiaryQueryService {
     }
 
     private DiaryHomeResponse toHomeResponse(Diary diary) {
-        String photoUrl = diary.getImage() != null ? diary.getImage().getUrl() : null;
+        String photoUrl = diary.getImage() != null
+                ? s3Service.getFileUrl(diary.getImage().getUrl())
+                : null;
         String emotion = diary.getEmotion() != null ? diary.getEmotion().getName() : null;
 
         List<String> tags = diary.getDiaryTags().stream()
@@ -90,7 +93,7 @@ public class DiaryQueryService {
                 .map(diary -> new DiaryMonthlyItemResponse(
                         diary.getId(),
                         diary.getDate().toLocalDate(),
-                        diary.getImage() != null ? diary.getImage().getUrl() : null,
+                        diary.getImage() != null ? s3Service.getFileUrl(diary.getImage().getUrl()) : null,
                         diary.getEmotion().getName(),
                         diary.getCreatedAt()
                 ))
@@ -112,7 +115,7 @@ public class DiaryQueryService {
         );
 
         List<String> imageUrls = diary.getImage() != null
-                ? List.of(diary.getImage().getUrl())
+                ? List.of(s3Service.getFileUrl(diary.getImage().getUrl()))
                 : List.of();
 
         String font = diary.getStyle() == null ? null : diary.getStyle().getFont();
@@ -162,7 +165,7 @@ public class DiaryQueryService {
                 .map(diary -> new FavoriteDiaryItemResponse(
                         diary.getId(),
                         diary.getDate().toLocalDate(),
-                        diary.getImage() != null ? diary.getImage().getUrl() : null,
+                        diary.getImage() != null ? s3Service.getFileUrl(diary.getImage().getUrl()) : null,
                         diary.getCreatedAt()
                 ))
                 .toList();
@@ -210,15 +213,18 @@ public class DiaryQueryService {
     public List<DiaryTagSearchItemResponse> getDiariesByTag(Long tagId, Member member) {
         Long memberId = member.getId();
 
-        // (날짜, 이미지 URL) 튜플 리스트
+        // (날짜, 이미지 key) 튜플 리스트
         List<Object[]> rawResults = diaryQueryRepository.findByTagIdWithImage(memberId, tagId);
 
-        // 날짜 기준 그룹
+        // 날짜 기준 그룹 (key → presigned URL 변환)
         Map<LocalDate, List<String>> grouped = rawResults.stream()
                 .collect(Collectors.groupingBy(
                         obj -> ((LocalDateTime) obj[0]).toLocalDate(),
                         TreeMap::new, // 정렬된 Map 유지
-                        Collectors.mapping(obj -> (String) obj[1], Collectors.toList())
+                        Collectors.mapping(obj -> {
+                            String key = (String) obj[1];
+                            return key != null ? s3Service.getFileUrl(key) : null;
+                        }, Collectors.toList())
                 ));
 
         // 그룹된 데이터 DTO로 변환
@@ -238,7 +244,7 @@ public class DiaryQueryService {
         return diaries.stream()
                 .map(diary -> {
                     String thumbnailUrl = (diary.getImage() != null && diary.getImage().getUrl() != null)
-                            ? diary.getImage().getUrl()
+                            ? s3Service.getFileUrl(diary.getImage().getUrl())
                             : "https://cdn.modi.com/default-thumb.jpg";
 
                     return new DiaryNearbyResponse(
@@ -271,7 +277,7 @@ public class DiaryQueryService {
                 diary.getId(),
                 diary.getSummary(),
                 diary.getDate(),
-                diary.getImage() != null ? diary.getImage().getUrl() : null,
+                diary.getImage() != null ? s3Service.getFileUrl(diary.getImage().getUrl()) : null,
                 tags,
                 frameId
         );
@@ -287,7 +293,7 @@ public class DiaryQueryService {
                 diary.getId(),
                 diary.getSummary(),
                 diary.getCreatedAt(),
-                diary.getImage() != null ? diary.getImage().getUrl() : null,
+                diary.getImage() != null ? s3Service.getFileUrl(diary.getImage().getUrl()) : null,
                 frameId
         );
     }
