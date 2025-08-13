@@ -10,6 +10,7 @@ import kuit.modi.exception.DiaryExceptionResponseStatus;
 import kuit.modi.service.DiaryQueryService;
 import kuit.modi.service.DiaryService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/diaries")
 @RequiredArgsConstructor
@@ -114,7 +116,6 @@ public class DiaryController {
         return ResponseEntity.ok(diaries);
     }
 
-
     // 즐겨찾기한 일기 목록 조회
     @GetMapping("/favorites")
     public ResponseEntity<List<FavoriteDiaryItemResponse>> getFavoriteDiaries(
@@ -135,14 +136,15 @@ public class DiaryController {
         return ResponseEntity.ok(response);
     }
 
-    // 특정 태그 기반으로 일기 검색 (날짜별 이미지 리스트)
-    @GetMapping(params = "tagId")
-    public ResponseEntity<List<DiaryTagSearchItemResponse>> getDiariesByTag(
+    // 특정 태그 이름 기반으로 검색 (날짜별 그룹 + 일기별 이미지 매핑)
+    @GetMapping(params = "tagName")
+    public ResponseEntity<List<DiaryTagSearchItemResponse>> getDiariesByTagName(
             @AuthenticationPrincipal Member member,
-            @RequestParam Long tagId
+            @RequestParam String tagName
     ) {
-        List<DiaryTagSearchItemResponse> results = diaryQueryService.getDiariesByTag(tagId, member);
-        return ResponseEntity.ok(results);
+        // 핸들러가 실제로 매칭되는지, 값이 뭘로 들어오는지 확인
+        log.info("GET /diaries?tagName={} (memberId={})", tagName, member != null ? member.getId() : null);
+        return ResponseEntity.ok(diaryQueryService.getDiariesByTagName(tagName, member));
     }
 
     // 많이 쓰이는 태그 조회
