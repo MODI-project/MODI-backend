@@ -25,7 +25,7 @@ public class S3Config {
 
     @Bean
     public AwsCredentialsProvider awsCredentialsProvider() {
-        // accessKey/secretKey가 설정돼 있으면 그걸 사용, 아니면 기본 프로바이더 체인 사용(환경변수/IAM Role 등)
+        // 명시된 키가 있으면 사용, 없으면 기본 프로바이더(EC2 IAM Role 등) 사용
         if (accessKey != null && !accessKey.isBlank()
                 && secretKey != null && !secretKey.isBlank()) {
             return StaticCredentialsProvider.create(
@@ -43,8 +43,9 @@ public class S3Config {
                 .build();
     }
 
-    // (선택) presigned URL이 필요하면 사용
-    @Bean
+    // 프리사인드 URL 발급용 Presigner
+    // 자동 종료를 위해 destroyMethod 설정(빈 소멸 시 close 호출)
+    @Bean(destroyMethod = "close")
     public S3Presigner s3Presigner(AwsCredentialsProvider credentialsProvider) {
         return S3Presigner.builder()
                 .region(Region.of(region))

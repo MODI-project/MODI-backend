@@ -205,6 +205,57 @@ public class DiaryQueryRepository {
                 .getResultList();
     }
 
+    // member + tagName(대소문자 무시)로 일기/이미지 조회 (이미지 없으면 null)
+    public List<Object[]> findByMemberAndTagNameWithImage(Long memberId, String tagNameNorm) {
+        return em.createQuery(
+                        """
+                        select d.id, d.date, i.url
+                        from Diary d
+                        left join d.image i
+                        where d.member.id = :memberId
+                          and exists (
+                               select 1
+                               from DiaryTag dt
+                               join dt.tag t
+                               where dt.diary = d
+                                 and lower(t.name) = :tagName
+                          )
+                        order by d.date asc, d.createdAt asc, d.id asc
+                        """, Object[].class)
+                .setParameter("memberId", memberId)
+                .setParameter("tagName", tagNameNorm.toLowerCase())
+                .getResultList();
+    }
+
+    // diaryId 리스트로 날짜/이미지 가져오기 (이미지 없을 수 있으니 LEFT JOIN)
+    public List<Object[]> findByDiaryIdsWithImage(List<Long> diaryIds) {
+        return em.createQuery(
+                        "select d.id, d.date, i.url " +
+                                "from Diary d " +
+                                "left join d.image i " +
+                                "where d.id in :ids " +
+                                "order by d.date asc, d.createdAt asc, d.id asc", Object[].class)
+                .setParameter("ids", diaryIds)
+                .getResultList();
+    }
+
+    // 특정 태그 이름에 해당하는 사용자의 일기 조회
+    // tagName 기반: 날짜/작성일 오름차순
+    public List<Object[]> findByTagNameWithImage(Long memberId, String tagName) {
+        return em.createQuery(
+                        "SELECT d.id, d.date, i.url " +
+                                "FROM Diary d " +
+                                "JOIN d.diaryTags dt " +
+                                "JOIN dt.tag t " +
+                                "LEFT JOIN d.image i " + // 이미지 없을 수도 있으면 LEFT JOIN
+                                "WHERE d.member.id = :memberId " +
+                                "AND LOWER(t.name) = LOWER(:tagName) " +
+                                "ORDER BY d.date ASC, d.createdAt ASC, d.id ASC", Object[].class)
+                .setParameter("memberId", memberId)
+                .setParameter("tagName", tagName.trim())
+                .getResultList();
+    }
+
     /*
      * 지도 범위 내 위/경도(lat/lng)에 해당하는 일기 목록 조회
      * - Location 포함 fetch
