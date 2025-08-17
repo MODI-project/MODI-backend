@@ -7,6 +7,7 @@ import kuit.modi.dto.diary.response.*;
 import kuit.modi.dto.reminder.DiaryReminderResponse;
 import kuit.modi.exception.CustomException;
 import kuit.modi.exception.DiaryExceptionResponseStatus;
+import kuit.modi.filter.DiaryValidator;
 import kuit.modi.service.DiaryQueryService;
 import kuit.modi.service.DiaryService;
 import lombok.RequiredArgsConstructor;
@@ -86,6 +87,9 @@ public class DiaryController {
             @AuthenticationPrincipal Member member,
             @PathVariable Long diaryId
     ) {
+        if (diaryId == null || diaryId <= 0) { // 비정상 id 차단
+            throw new CustomException(DiaryExceptionResponseStatus.DIARY_NOT_FOUND);
+        }
         DiaryDetailResponse response = diaryQueryService.getDiaryDetail(diaryId, member);
         return ResponseEntity.ok(response);
     }
@@ -97,6 +101,7 @@ public class DiaryController {
             @RequestParam int year,
             @RequestParam int month
     ) {
+        DiaryValidator.validateYearMonth(year, month);
         DiaryAllResponse response = diaryQueryService.getDailyDetailMonthly(year, month, member);
         return ResponseEntity.ok(response);
     }
@@ -111,6 +116,7 @@ public class DiaryController {
         if (year == null || month == null) {
             throw new CustomException(DiaryExceptionResponseStatus.INVALID_YEAR_MONTH);
         }
+        DiaryValidator.validateYearMonth(year, month);
 
         List<DiaryMonthlyItemResponse> diaries = diaryQueryService.getMonthlyDiaries(year, month, member);
         return ResponseEntity.ok(diaries);
@@ -132,6 +138,7 @@ public class DiaryController {
             @RequestParam int year,
             @RequestParam int month
     ) {
+        DiaryValidator.validateYearMonth(year, month);
         DiaryStatisticsResponse response = diaryQueryService.getMonthlyStatistics(year, month, member);
         return ResponseEntity.ok(response);
     }
@@ -162,7 +169,7 @@ public class DiaryController {
             @RequestParam double neLat,
             @RequestParam double neLng,
             @AuthenticationPrincipal Member member) {
-
+        DiaryValidator.validateBounds(swLat, swLng, neLat, neLng);
         List<DiaryNearbyResponse> diaries = diaryQueryService.getNearbyDiaries(swLat, swLng, neLat, neLng, member);
         return ResponseEntity.ok(diaries);
     }
