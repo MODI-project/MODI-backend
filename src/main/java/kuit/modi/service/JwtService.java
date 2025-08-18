@@ -22,7 +22,7 @@ public class JwtService {
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 24000 * 60 * 60))
+                .setExpiration(new Date(System.currentTimeMillis() + 24000 * 60 * 60)) // 24시간
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
