@@ -1,9 +1,9 @@
 package kuit.modi.service;
 
 import io.jsonwebtoken.Claims;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import io.jsonwebtoken.Jwts;
@@ -13,9 +13,11 @@ import java.security.Key;
 
 @Service
 public class JwtService {
-    private final String secretString = "ThisIsVeryVeryVeryVeryVerySecretKeyExample";
-    Key secretKey = Keys.hmacShaKeyFor(secretString.getBytes(StandardCharsets.UTF_8));
+    private final Key secretKey;
 
+    public JwtService(@Value("${jwt.secret}") String secret){
+        this.secretKey = Keys.hmacShaKeyFor(io.jsonwebtoken.io.Decoders.BASE64.decode(secret));
+    }
     public String createToken(Long userId) {
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
