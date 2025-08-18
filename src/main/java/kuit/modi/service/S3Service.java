@@ -87,33 +87,95 @@ public class S3Service {
 
     public void deleteByKey(String key) {
         try {
+            String normalizedKey = normalizeKey(key); // 앞의 "/" 제거 + URL 디코드
             s3Client.deleteObject(DeleteObjectRequest.builder()
                     .bucket(bucketName)
-                    .key(key)
+                    .key(normalizedKey)
                     .build());
         } catch (Exception e) {
             throw new CustomException(S3ExceptionResponseStatus.S3_DELETE_FAILED);
         }
     }
 
-    public void deleteFileFromUrl(String url) {
+    public void deleteFileFromUrl(String urlOrKey) {
         try {
-            URL s3Url = new URL(url);
-            String rawKey = s3Url.getPath().substring(1); // "/abc.png" → "abc.png"
-            String decodedKey = URLDecoder.decode(rawKey, StandardCharsets.UTF_8);
-
-            System.out.println("버킷 이름: " + bucketName);
-            System.out.println("삭제 대상 URL: " + url);
-            System.out.println("최종 삭제 대상 key = " + decodedKey);
-
+            String key = resolveKey(urlOrKey);        // URL이면 key 추출, key면 그대로
+            String normalizedKey = normalizeKey(key); // 앞의 "/" 제거 + URL 디코드
             s3Client.deleteObject(DeleteObjectRequest.builder()
                     .bucket(bucketName)
-                    .key(decodedKey)
+                    .key(normalizedKey)
                     .build());
         } catch (Exception e) {
             throw new CustomException(S3ExceptionResponseStatus.S3_DELETE_FAILED);
         }
     }
+
+    private String resolveKey(String urlOrKey) {
+        // http(s)로 시작하면 URL로 간주하여 key 추출
+        if (urlOrKey.startsWith("http://") || urlOrKey.startsWith("https://")) {
+            try {
+                URL u = new URL(urlOrKey);
+                String host = u.getHost();       // 예: <bucket>.s3.ap-northeast-2.amazonaws.com 또는 CloudFront 도메인
+                String path = u.getPath();       // 예: /<key> 또는 /<bucket>/<key>
+                if (path == null) return "";
+
+                // path 앞의 "/" 제거
+                String p = path.startsWith("/") ? path.substring(1) : path;
+
+                // 경로스타일: s3.<region>.amazonaws.com/<bucket>/<key>
+                if (host != null && host.contains("amazonaws.com")) {
+                    if (p.startsWith(bucketName + "/")) {
+                        return p.substring(bucketName.length() + 1);
+                    }
+                    return p;
+                }
+
+                // 가상호스팅 또는 CloudFront: <bucket>.* 또는 커스텀 도메인 → path가 곧 key
+                // (일부 구성에선 /<bucket>/<key>일 수 있으므로 한번 더 방어)
+                if (p.startsWith(bucketName + "/")) {
+                    return p.substring(bucketName.length() + 1);
+                }
+                return p;
+            } catch (Exception e) {
+                // URL 파싱 실패 시 원본을 key로 취급
+                return urlOrKey;
+            }
+        }
+        // 이미 key인 경우
+        return urlOrKey;
+    }
+
+    private String normalizeKey(String key) {
+        String k = (key.startsWith("/")) ? key.substring(1) : key;
+        // 퍼센트 인코딩이 있는 경우에만 디코딩 ( '+' 오해방지 )
+        if (k.indexOf('%') >= 0) {
+            try {
+                k = URLDecoder.decode(k, StandardCharsets.UTF_8);
+            } catch (IllegalArgumentException ignore) {
+                // 잘못된 인코딩이면 원본 유지
+            }
+        }
+        return k;
+    }
+
+//    public void deleteFileFromUrl(String url) { //TODO 테스트 끝나면 삭제
+//        try {
+//            URL s3Url = new URL(url);
+//            String rawKey = s3Url.getPath().substring(1); // "/abc.png" → "abc.png"
+//            String decodedKey = URLDecoder.decode(rawKey, StandardCharsets.UTF_8);
+//
+//            System.out.println("버킷 이름: " + bucketName);
+//            System.out.println("삭제 대상 URL: " + url);
+//            System.out.println("최종 삭제 대상 key = " + decodedKey);
+//
+//            s3Client.deleteObject(DeleteObjectRequest.builder()
+//                    .bucket(bucketName)
+//                    .key(decodedKey)
+//                    .build());
+//        } catch (Exception e) {
+//            throw new CustomException(S3ExceptionResponseStatus.S3_DELETE_FAILED);
+//        }
+//    }
 
     private String extractFileNameFromUrl(String url) {
         return url.substring(url.lastIndexOf("/") + 1);
