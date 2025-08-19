@@ -125,15 +125,16 @@ public class DiaryService {
 
         diary.getDiaryTags().addAll(newDiaryTags);
 
+        //이미지 파일 수정
         if (imageFile != null && !imageFile.isEmpty()) {
-            S3Service.UploadResult uploaded = s3Service.uploadFile(imageFile);
+            S3Service.UploadResult uploaded = s3Service.uploadFile(imageFile); //S3에 파일 업로드
 
-            if (diary.getImage() != null) {
+            if (diary.getImage() != null) { // diary에 등록된 기존 이미지가 있을 경우
                 String oldKey = diary.getImage().getUrl(); // 필드명은 url이지만 내용은 key임
                 s3Service.deleteByKey(oldKey);
-
+                // 기존 이미지 삭제 후 새 이미지로 교체
                 diary.getImage().setUrl(uploaded.key());
-            } else {
+            } else { // 기존 이미지가 없었을 경우 객체 새로 생성하여 등록
                 Image newImage = Image.create(uploaded.key(), diary);
                 diary.setImage(newImage);
             }
