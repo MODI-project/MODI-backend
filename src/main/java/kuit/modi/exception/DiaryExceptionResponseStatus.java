@@ -14,7 +14,8 @@ public enum DiaryExceptionResponseStatus implements BaseExceptionResponseStatus 
     INVALID_EMOTION(10004, HttpStatus.BAD_REQUEST, "감정 정보가 유효하지 않습니다."),
     INVALID_FRAME(10005, HttpStatus.BAD_REQUEST, "프레임 정보가 유효하지 않습니다."),
     INVALID_LOCATION(10006, HttpStatus.BAD_REQUEST, "위치 정보가 유효하지 않습니다."),
-    INVALID_YEAR_MONTH(10007, HttpStatus.BAD_REQUEST, "유효하지 않은 연/월 값입니다.");
+    INVALID_YEAR_MONTH(10007, HttpStatus.BAD_REQUEST, "유효하지 않은 연/월 값입니다."),
+    MISSING_FRAME(10008, HttpStatus.BAD_REQUEST, "프레임 값이 누락되었습니다.");
 
     private final int code;
     private final HttpStatus httpStatus;

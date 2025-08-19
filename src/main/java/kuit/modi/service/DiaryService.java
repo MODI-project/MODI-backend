@@ -140,7 +140,9 @@ public class DiaryService {
             }
         }
 
-        if (request.frame() != null) {
+        if(request.frame() == null){
+            throw new CustomException(DiaryExceptionResponseStatus.MISSING_FRAME);
+        } else {
             Frame frame = frameRepository.findById(request.frame())
                     .orElseThrow(() -> new CustomException(DiaryExceptionResponseStatus.INVALID_FRAME));
             Style style = diary.getStyle();
