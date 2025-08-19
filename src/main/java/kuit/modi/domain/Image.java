@@ -16,7 +16,7 @@ public class Image {
     private Long id;
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String url;
+    private String url; // 필드명은 url이지만, 실제 내용은 key를 담고 있음.
 
     @OneToOne
     @JoinColumn(name = "diary_id", unique = true, nullable = false)
