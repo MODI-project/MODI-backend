@@ -62,10 +62,6 @@ public class DiaryService {
         // Style 생성 (Frame은 엔티티로 전달)
         diary.setStyle(Style.create(request.font(), diary, frame));
 
-//        if (imageFile != null && !imageFile.isEmpty()) {
-//            String imageUrl = s3Service.uploadFile(imageFile); // S3 URL 저장
-//            diary.setImage(Image.create(imageUrl, diary));
-//        }
         if (imageFile != null && !imageFile.isEmpty()) {
             S3Service.UploadResult uploaded = s3Service.uploadFile(imageFile);
             // DB에는 url 대신 key만 저장
@@ -99,11 +95,14 @@ public class DiaryService {
                 .orElseThrow(() -> new CustomException(DiaryExceptionResponseStatus.INVALID_EMOTION));
         diary.setEmotion(emotion);
 
-        Tone tone = toneRepository.findByName(request.tone())
-                .orElseThrow(() -> new CustomException(DiaryExceptionResponseStatus.INVALID_TONE));
+        Tone tone = toneRepository.findByName(request.tone()) // 톤 정보 없을 시 생성
+                .orElseGet(() -> {
+                    Tone newTone = Tone.create(request.tone());
+                    return toneRepository.save(newTone);
+                });
         diary.setTone(tone);
 
-        Location location = locationRepository.findByAddressAndLatitudeAndLongitude(
+        Location location = locationRepository.findByAddressAndLatitudeAndLongitude( // 위치 정보 없을 시 생성
                         request.address(), request.latitude(), request.longitude())
                 .orElseGet(() -> locationRepository.save(Location.create(request.address(), request.latitude(), request.longitude())));
         diary.setLocation(location);
