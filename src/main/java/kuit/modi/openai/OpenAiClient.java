@@ -1,15 +1,11 @@
 package kuit.modi.openai;
 
 import kuit.modi.dto.ai.response.OpenAiResponse;
-import kuit.modi.exception.CustomException;
-import kuit.modi.exception.OpenAiExceptionResponseStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
@@ -36,34 +32,11 @@ public class OpenAiClient {
                 )
         );
 
-        /*
         return client.post()
                 .bodyValue(requestBody)
                 .retrieve()
                 .bodyToMono(OpenAiResponse.class)
                 .block()
                 .getFirstMessage();
-        */
-
-        try {
-            return client.post()
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .onStatus(
-                            status -> !status.is2xxSuccessful(),
-                            response -> response.bodyToMono(String.class)
-                                    .flatMap(body -> Mono.error(
-                                            new CustomException(OpenAiExceptionResponseStatus.API_ERROR)
-                                    ))
-                    )
-                    .bodyToMono(OpenAiResponse.class)
-                    .blockOptional()
-                    .map(OpenAiResponse::getFirstMessage)
-                    .orElseThrow(() -> new CustomException(OpenAiExceptionResponseStatus.INVALID_RESPONSE));
-        } catch (WebClientResponseException e) {
-            throw new CustomException(OpenAiExceptionResponseStatus.API_ERROR);
-        } catch (Exception e) {
-            throw new CustomException(OpenAiExceptionResponseStatus.UNKNOWN_ERROR);
-        }
     }
 }
