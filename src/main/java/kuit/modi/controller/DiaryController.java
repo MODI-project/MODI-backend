@@ -67,7 +67,9 @@ public class DiaryController {
     // 일기 삭제
     @DeleteMapping("/{diaryId}")
     public ResponseEntity<?> deleteDiary(@PathVariable Long diaryId) {
+        log.info("DELETE 요청 수신 - diaryId={}", diaryId); // ★ 로그 추가
         diaryService.deleteDiary(diaryId);
+        log.info("DELETE 처리 완료 - diaryId={}", diaryId); // ★ 처리 완료 로그
         return ResponseEntity.ok(new DiaryDeleteResponse("기록 삭제가 완료되었습니다."));
     }
 
@@ -167,6 +169,17 @@ public class DiaryController {
         return ResponseEntity.ok(diaries);
     }
 
+    // 리마인더 알림용 요청 - 반경 100m 기준
+    /*
+    @GetMapping("/reminder")
+    public ResponseEntity<List<DiaryReminderResponse>> getReminderDiaries(
+            @RequestParam double latitude,
+            @RequestParam double longitude) {
+
+        List<DiaryReminderResponse> response = diaryQueryService.getReminderDiaries(latitude, longitude);
+        return ResponseEntity.ok(response);
+    }
+    */
 }
 
 

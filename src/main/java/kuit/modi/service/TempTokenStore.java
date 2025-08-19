@@ -14,6 +14,6 @@ public class TempTokenStore {
     }
 
     public String get(String key) {
-        return store.remove(key);
+        return store.remove(key); // 한번 꺼내면 삭제
     }
 }

@@ -44,23 +44,24 @@ public class OAuthController {
 
     @GetMapping("/authorize/google")
     public void redirectToGoogle(HttpServletResponse response) throws IOException {
+        System.out.println("authorize 요청 받음");
         String redirectUrl = googleOAuthService.getGoogleLoginUrl();
         response.sendRedirect(redirectUrl);
     }
 
     @GetMapping("/callback/google")
     public void handleGoogleCallback(@RequestParam String code, HttpServletResponse response) throws IOException {
+        System.out.println("callback 응답 받음");
         String accessToken = googleOAuthService.getAccessToken(code);
         GoogleUserInfo userInfo = googleOAuthService.getUserInfo(accessToken);
         Optional<Member> existingMemberOpt = memberRepository.findByEmail(userInfo.email());
 
         boolean isNew = false;
         Member member;
-
         if (existingMemberOpt.isPresent()) {
             member = existingMemberOpt.get();
         } else {
-            // 기존 회원이 아닐 경우 임시 회원 생성
+            // 기존 회원이 아니면 이메일만으로 임시 회원 생성
             isNew = true;
             CharacterType momo = characterTypeRepository.findByName("momo")
                     .orElseThrow(() -> new CustomException(MemberExceptionResponseStatus.INVALID_CHARACTER_TYPE));
@@ -71,13 +72,15 @@ public class OAuthController {
 
         // JWT 생성 후 임시 저장
         String jwt = jwtService.createToken(member.getId());
-        //System.out.println(jwt);
+        System.out.println(jwt);
 
         String key = UUID.randomUUID().toString();
         tempTokenStore.save(key, jwt);
 
-        // 환경에 따른 분기 처리 및 리디렉션
+        // 환경에 따른 분기 처리
         boolean isLocal = mode.equalsIgnoreCase("local");
+
+        // 리디렉션 URL 설정
         String baseRedirect = isLocal ? localRedirectBase : prodRedirectBase;
         String redirectUrl = baseRedirect + (isNew ? "/information-setting" : "/home") + "?code=" + key;
 
@@ -89,10 +92,6 @@ public class OAuthController {
         String code = body.get("code");
         String jwt = tempTokenStore.get(code);
 
-        if (jwt == null) {
-            return ResponseEntity.badRequest().build();
-        }
-
         ResponseCookie cookie = ResponseCookie.from("access_token", jwt)
                 .httpOnly(true)
                 .secure(true)
@@ -102,7 +101,9 @@ public class OAuthController {
                 .build();
 
         response.addHeader("Set-Cookie", cookie.toString());
+        tempTokenStore.get(code);
 
         return ResponseEntity.ok().build();
     }
 }
+
