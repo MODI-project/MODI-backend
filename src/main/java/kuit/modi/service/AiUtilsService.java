@@ -83,7 +83,7 @@ public class AiUtilsService {
     public String getStyledSummary(StyledSummaryRequest request) {
         String userPrompt = request.getSummary();
 
-        if ("인터넷 밈".equals(request.getStyle())) {
+        if ("인터넷밈".equals(request.getStyle())) {
             return openAiClient.ask(SYSTEM_ROLE_INTERNET_MEME, userPrompt);
         } else if ("다이어리".equals(request.getStyle())) {
             return openAiClient.ask(SYSTEM_ROLE_DIARY, userPrompt);
