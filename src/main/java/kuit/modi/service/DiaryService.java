@@ -6,6 +6,7 @@ import kuit.modi.dto.diary.request.CreateDiaryRequest;
 import kuit.modi.dto.diary.request.UpdateDiaryRequest;
 import kuit.modi.exception.CustomException;
 import kuit.modi.exception.DiaryExceptionResponseStatus;
+import kuit.modi.exception.S3ExceptionResponseStatus;
 import kuit.modi.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -158,44 +159,28 @@ public class DiaryService {
         diary.setFavorite(favorite);
     }
 
-//    @Transactional
-//    public void deleteDiary(Long diaryId) {
-//        Diary diary = diaryRepository.findById(diaryId)
-//                .orElseThrow(() -> new CustomException(DiaryExceptionResponseStatus.DIARY_NOT_FOUND));
-//
-//        // S3에서 이미지 먼저 삭제
-//        if (diary.getImage() != null) {
-//            s3Service.deleteFileFromUrl(diary.getImage().getUrl());
-//        }
-//        // 연관된 Image 엔티티는 cascade로 DB에서 자동 삭제됨
-//        diaryRepository.delete(diary);
-//    }
-
     @Transactional
     public void deleteDiary(Long diaryId) {
-        log.info("[SRV] deleteDiary start id={}", diaryId);
+        log.info("deleteDiary start id={}", diaryId);
 
         Diary diary = diaryRepository.findById(diaryId).orElseThrow(() -> {
-            log.warn("[SRV] diary not found id={}", diaryId);
+            log.warn("diary not found id={}", diaryId);
             return new CustomException(DiaryExceptionResponseStatus.DIARY_NOT_FOUND);
         });
 
         String imageUrl = (diary.getImage() != null) ? diary.getImage().getUrl() : null;
         if (imageUrl != null) {
-            log.info("[SRV] S3 delete try url={}", imageUrl);
+            log.info("S3 delete try url={}", imageUrl);
             try {
                 s3Service.deleteFileFromUrl(imageUrl);
-                log.info("[SRV] S3 delete ok");
+                log.info("S3 delete ok");
             } catch (Exception e) {
-                // 여기서 잡아서 재던지면, 커스텀 에러코드 20003 매핑 지점에서도 로그 확보 가능
-                log.error("[SRV] S3 delete fail url={} ex={}", imageUrl, e.toString(), e);
-                throw e; // 혹은 throw new CustomException(IMAGE_DELETE_FAIL);
+                throw new CustomException(S3ExceptionResponseStatus.S3_DELETE_FAILED);
             }
         } else {
-            log.debug("[SRV] no image attached, skip S3 delete");
+            log.debug("no image attached, skip S3 delete");
         }
 
         diaryRepository.delete(diary);
-        log.info("[SRV] diary row deleted id={}", diaryId);
     }
 }
