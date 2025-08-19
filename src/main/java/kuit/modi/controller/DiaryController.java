@@ -67,9 +67,7 @@ public class DiaryController {
     // 일기 삭제
     @DeleteMapping("/{diaryId}")
     public ResponseEntity<?> deleteDiary(@PathVariable Long diaryId) {
-        log.info("DELETE 요청 수신 - diaryId={}", diaryId); // ★ 로그 추가
         diaryService.deleteDiary(diaryId);
-        log.info("DELETE 처리 완료 - diaryId={}", diaryId); // ★ 처리 완료 로그
         return ResponseEntity.ok(new DiaryDeleteResponse("기록 삭제가 완료되었습니다."));
     }
 
