@@ -29,13 +29,10 @@ import java.util.UUID;
 public class S3Service {
 
     private final S3Client s3Client;
-    private final S3Presigner s3Presigner; // ★ 추가
+    private final S3Presigner s3Presigner;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
-
-    @Value("${cloud.aws.region.static}")
-    private String region;
 
     public record UploadResult(String key, String url) {}
 
@@ -156,28 +153,5 @@ public class S3Service {
             }
         }
         return k;
-    }
-
-//    public void deleteFileFromUrl(String url) { //TODO 테스트 끝나면 삭제
-//        try {
-//            URL s3Url = new URL(url);
-//            String rawKey = s3Url.getPath().substring(1); // "/abc.png" → "abc.png"
-//            String decodedKey = URLDecoder.decode(rawKey, StandardCharsets.UTF_8);
-//
-//            System.out.println("버킷 이름: " + bucketName);
-//            System.out.println("삭제 대상 URL: " + url);
-//            System.out.println("최종 삭제 대상 key = " + decodedKey);
-//
-//            s3Client.deleteObject(DeleteObjectRequest.builder()
-//                    .bucket(bucketName)
-//                    .key(decodedKey)
-//                    .build());
-//        } catch (Exception e) {
-//            throw new CustomException(S3ExceptionResponseStatus.S3_DELETE_FAILED);
-//        }
-//    }
-
-    private String extractFileNameFromUrl(String url) {
-        return url.substring(url.lastIndexOf("/") + 1);
     }
 }
