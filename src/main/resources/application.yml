@@ -47,7 +47,7 @@ app:
   frontend:
     local: https://localhost:5173
     prod: https://modi-frontend-beryl.vercel.app
-  mode: local # local 또는 prod, 배포 시 변경 가능
+  mode: prod # local 또는 prod, 배포 시 변경 가능
 
 openai:
   api:
