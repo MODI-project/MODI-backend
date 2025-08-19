@@ -149,8 +149,8 @@ public class DiaryController {
 
     // 많이 쓰이는 태그 조회
     @GetMapping("/tags/popular")
-    public ResponseEntity<List<String>> getPopularTags() {
-        List<String> tags = diaryQueryService.getPopularTags();
+    public ResponseEntity<List<String>> getPopularTags(@AuthenticationPrincipal Member member) {
+        List<String> tags = diaryQueryService.getPopularTags(member.getId());
         return ResponseEntity.ok(tags);
     }
 
