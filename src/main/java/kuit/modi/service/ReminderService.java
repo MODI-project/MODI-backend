@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,8 +29,11 @@ public class ReminderService {
 
     public List<DiaryReminderResponse> getRemindersByAddress(Member member, String address) {
         // 1. 주소 → Location 엔티티 조회
-        Location location = locationRepository.findByAddress(address)
-                .orElseThrow(() -> new EntityNotFoundException("해당 주소를 찾을 수 없습니다."));
+        Optional<Location> optionalLocation = locationRepository.findByAddress(address);
+        if (optionalLocation.isEmpty()) {
+            return List.of(); // 주소 자체가 없으면 빈 리스트 반환
+        }
+        Location location = optionalLocation.get();
 
         // 2. 해당 유저가 해당 위치에 쓴 다이어리 목록 최신순 조회
         List<Diary> diaries = diaryRepository.findByMemberAndLocationOrderByDateDesc(member, location);
