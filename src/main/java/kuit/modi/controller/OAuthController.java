@@ -71,7 +71,7 @@ public class OAuthController {
 
         // JWT 생성 후 임시 저장
         String jwt = jwtService.createToken(member.getId());
-        //System.out.println(jwt);
+        System.out.println(jwt);
 
         String key = UUID.randomUUID().toString();
         tempTokenStore.save(key, jwt);
