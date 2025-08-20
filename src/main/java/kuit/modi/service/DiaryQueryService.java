@@ -282,8 +282,8 @@ public class DiaryQueryService {
         return s.startsWith("http://") || s.startsWith("https://");
     }
 
-    public List<String> getPopularTags() {
-        return tagRepository.findTopTagNames(PageRequest.of(0, 10)); // 상위 10개
+    public List<String> getPopularTags(Long memberId) {
+        return tagRepository.findTopTagNamesByMemberId(memberId, PageRequest.of(0, 10)); // 상위 10개
     }
 
     // 지도 조회용
