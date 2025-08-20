@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/**", "/api/diaries/**", "/api/utils/**")
+                        .requestMatchers("/api/members/**", "/api/diaries/**", "/api/utils/**", "/api/reminders/**")
                         .authenticated()
                         .anyRequest().permitAll()
                 )
@@ -51,7 +51,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
-                "http://localhost:5173",         // 개발용
+                "http://localhost:5173",          // 개발용
+                "https://localhost:5173",         // 개발용
                 "https://modi-frontend-beryl.vercel.app"  // 배포용
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

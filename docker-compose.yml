@@ -8,9 +8,26 @@ services:
     env_file:
       - .env
     environment:
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      AWS_REGION: ${AWS_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
       SPRING_DATASOURCE_URL: jdbc:mysql://${MYSQL_HOST}:3306/${MYSQL_DATABASE}?serverTimezone=Asia/Seoul
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+      # --- JVM 안정화(권장) ---
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m -XX:-UseContainerSupport"
+      TZ: Asia/Seoul
+
     volumes:
       - /home/ubuntu/configs/:/config/
     command: [

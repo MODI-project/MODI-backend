@@ -23,29 +23,46 @@ repositories {
 	mavenCentral()
 }
 
+ext {
+	// 최신 2.25.x로 맞춰서 쓰면 됨 (원하면 한 줄만 바꾸면 됨)
+	awsSdkV2 = '2.25.40'
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'io.github.cdimascio:dotenv-java:3.0.0'
 
-	//db-h2
+	// DB - H2 (로컬/테스트)
 	implementation 'com.h2database:h2'
 	testImplementation 'com.h2database:h2'
 
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
-	//jwt 관련
+	// JWT
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // Jackson 사용 시 필요
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-	// S3 관련
-	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// ===== AWS SDK v2 (S3) =====
+	implementation platform("software.amazon.awssdk:bom:${awsSdkV2}")
+	implementation 'software.amazon.awssdk:s3'
+	implementation 'software.amazon.awssdk:auth'
+	// (선택) 대용량/비동기 업로드 필요 시
+	implementation 'software.amazon.awssdk:s3-transfer-manager'
+
+	// ===== 제거 (v1 + Spring Cloud AWS) =====
+	// implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'  // 삭제
+	// implementation 'com.amazonaws:aws-java-sdk-s3:1.x.x'                                // 삭제
+	// implementation 'com.amazonaws:aws-java-sdk-core:1.x.x'                              // 삭제
 }
 
 tasks.named('test') {

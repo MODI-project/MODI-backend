@@ -10,14 +10,18 @@ import kuit.modi.repository.CharacterTypeRepository;
 import kuit.modi.repository.MemberRepository;
 import kuit.modi.service.GoogleOAuthService;
 import kuit.modi.service.JwtService;
+import kuit.modi.service.TempTokenStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,6 +31,7 @@ public class OAuthController {
     private final JwtService jwtService;
     private final MemberRepository memberRepository;
     private final CharacterTypeRepository characterTypeRepository;
+    private final TempTokenStore tempTokenStore;
 
     @Value("${app.mode}")
     private String mode;
@@ -45,17 +50,17 @@ public class OAuthController {
 
     @GetMapping("/callback/google")
     public void handleGoogleCallback(@RequestParam String code, HttpServletResponse response) throws IOException {
-        //System.out.println("/callback/google 요청 받음");
         String accessToken = googleOAuthService.getAccessToken(code);
         GoogleUserInfo userInfo = googleOAuthService.getUserInfo(accessToken);
         Optional<Member> existingMemberOpt = memberRepository.findByEmail(userInfo.email());
 
         boolean isNew = false;
         Member member;
+
         if (existingMemberOpt.isPresent()) {
             member = existingMemberOpt.get();
         } else {
-            // 기존 회원이 아니면 이메일만으로 임시 회원 생성
+            // 기존 회원이 아닐 경우 임시 회원 생성
             isNew = true;
             CharacterType momo = characterTypeRepository.findByName("momo")
                     .orElseThrow(() -> new CustomException(MemberExceptionResponseStatus.INVALID_CHARACTER_TYPE));
@@ -64,27 +69,40 @@ public class OAuthController {
             member = memberRepository.save(newMember);
         }
 
-        // jwt 생성
+        // JWT 생성 후 임시 저장
         String jwt = jwtService.createToken(member.getId());
-        System.out.println(jwt);
+        //System.out.println(jwt);
 
-        // 환경에 따른 분기 처리
+        String key = UUID.randomUUID().toString();
+        tempTokenStore.save(key, jwt);
+
+        // 환경에 따른 분기 처리 및 리디렉션
         boolean isLocal = mode.equalsIgnoreCase("local");
+        String baseRedirect = isLocal ? localRedirectBase : prodRedirectBase;
+        String redirectUrl = baseRedirect + (isNew ? "/information-setting" : "/home") + "?code=" + key;
+
+        response.sendRedirect(redirectUrl);
+    }
+
+    @PostMapping("/set-cookie")
+    public ResponseEntity<Void> setCookie(@RequestBody Map<String, String> body, HttpServletResponse response) {
+        String code = body.get("code");
+        String jwt = tempTokenStore.get(code);
+
+        if (jwt == null) {
+            return ResponseEntity.badRequest().build();
+        }
 
         ResponseCookie cookie = ResponseCookie.from("access_token", jwt)
                 .httpOnly(true)
                 .secure(true)
-                .path("/")
                 .sameSite("None")
+                .path("/")
                 .maxAge(Duration.ofHours(24))
                 .build();
 
         response.addHeader("Set-Cookie", cookie.toString());
 
-        // 리디렉션 URL 설정
-        String baseRedirect = isLocal ? localRedirectBase : prodRedirectBase;
-        String redirectUrl = baseRedirect + (isNew ? "/information-setting" : "/home");
-
-        response.sendRedirect(redirectUrl);
+        return ResponseEntity.ok().build();
     }
 }
