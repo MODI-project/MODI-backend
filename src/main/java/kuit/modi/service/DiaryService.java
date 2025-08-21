@@ -48,7 +48,8 @@ public class DiaryService {
         Frame frame = frameRepository.findByName(request.frame())
                 .orElseThrow(() -> new CustomException(DiaryExceptionResponseStatus.INVALID_FRAME));
 
-        Location location = locationRepository.findByAddress(request.address()) // 위치 정보 없을 시 생성
+        Location location = locationRepository.findByAddressAndLatitudeAndLongitude( // 위치 정보 없을 시 생성
+                        request.address(), request.latitude(), request.longitude())
                 .orElseGet(() -> {
                     Location newLocation = Location.create(request.address(), request.latitude(), request.longitude());
                     return locationRepository.save(newLocation);
