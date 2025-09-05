@@ -53,7 +53,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",          // 개발용
                 "https://localhost:5173",         // 개발용
-                "https://modi-frontend-beryl.vercel.app"  // 배포용
+                "https://modi-frontend-nu.vercel.app"  // 배포용
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
