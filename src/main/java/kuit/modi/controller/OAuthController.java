@@ -93,15 +93,25 @@ public class OAuthController {
             return ResponseEntity.badRequest().build();
         }
 
-        ResponseCookie cookie = ResponseCookie.from("access_token", jwt)
+        // 기존 쿠키 삭제 (만료시킴)
+        ResponseCookie deleteCookie = ResponseCookie.from("access_token", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("None")
+                .path("/")
+                .maxAge(0) // 즉시 만료
+                .build();
+        response.addHeader("Set-Cookie", deleteCookie.toString());
+
+        // 새 쿠키 발급
+        ResponseCookie newCookie = ResponseCookie.from("access_token", jwt)
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("None")
                 .path("/")
                 .maxAge(Duration.ofHours(24))
                 .build();
-
-        response.addHeader("Set-Cookie", cookie.toString());
+        response.addHeader("Set-Cookie", newCookie.toString());
 
         return ResponseEntity.ok().build();
     }
