@@ -13,6 +13,7 @@ import kuit.modi.service.JwtService;
 import kuit.modi.service.TempTokenStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -60,7 +61,7 @@ public class OAuthController {
         if (existingMemberOpt.isPresent()) {
             member = existingMemberOpt.get();
         } else {
-            // 기존 회원이 아닐 경우 임시 회원 생성
+            // 신규 회원이면 임시 회원 생성
             isNew = true;
             CharacterType momo = characterTypeRepository.findByName("momo")
                     .orElseThrow(() -> new CustomException(MemberExceptionResponseStatus.INVALID_CHARACTER_TYPE));
@@ -69,21 +70,48 @@ public class OAuthController {
             member = memberRepository.save(newMember);
         }
 
-        // JWT 생성 후 임시 저장
+        // JWT 생성
         String jwt = jwtService.createToken(member.getId());
         System.out.println(jwt);
 
+        /* 기존 토큰 임시 저장 코드
         String key = UUID.randomUUID().toString();
         tempTokenStore.save(key, jwt);
+        */
 
-        // 환경에 따른 분기 처리 및 리디렉션
+        // 기존 쿠키 삭제 (만료시킴)
+        ResponseCookie deleteCookie = ResponseCookie.from("access_token", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("None")
+                .path("/")
+                .maxAge(0) // 즉시 만료
+                .build();
+        response.addHeader("Set-Cookie", deleteCookie.toString());
+
+        // 새 쿠키 발급
+        ResponseCookie newCookie = ResponseCookie.from("access_token", jwt)
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("None")
+                .path("/")
+                .maxAge(Duration.ofHours(24))
+                .build();
+        response.addHeader("Set-Cookie", newCookie.toString());
+
+        // 환경에 따른 분기 처리 및 303 리다이렉트
         boolean isLocal = mode.equalsIgnoreCase("local");
         String baseRedirect = isLocal ? localRedirectBase : prodRedirectBase;
-        String redirectUrl = baseRedirect + (isNew ? "/information-setting" : "/home") + "?code=" + key;
+        String redirectUrl = baseRedirect + (isNew ? "/information-setting" : "/home");
 
-        response.sendRedirect(redirectUrl);
+        response.setStatus(HttpServletResponse.SC_SEE_OTHER);
+        response.setHeader(HttpHeaders.LOCATION, redirectUrl);
+
+        // 기존 302 리다이렉트
+        //response.sendRedirect(redirectUrl);
     }
 
+    // 사용 안 함
     @PostMapping("/set-cookie")
     public ResponseEntity<Void> setCookie(@RequestBody Map<String, String> body, HttpServletResponse response) {
         String code = body.get("code");

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
-public class RecentReminderResponse {
+public class ReminderResponse {
     private Long id;
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
