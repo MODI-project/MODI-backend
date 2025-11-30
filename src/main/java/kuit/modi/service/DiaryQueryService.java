@@ -15,6 +15,8 @@ import kuit.modi.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -345,6 +347,124 @@ public class DiaryQueryService {
                 diary.getImage() != null ? s3Service.getFileUrl(diary.getImage().getUrl()) : null,
                 frameId
         );
+    }
+
+    //메인 홈 월별 조회 페이징
+    @Transactional(readOnly = true)
+    public DiaryPageResponse<DiaryMonthlyItemResponse> getMonthlyDiariesPaged(
+            int year, int month, Member member, int page, int size) {
+
+        if (month < 1 || month > 12) {
+            throw new CustomException(DiaryExceptionResponseStatus.INVALID_YEAR_MONTH);
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        long totalElements = diaryQueryRepository.countMonthlyDiaries(member.getId(), year, month);
+        List<Diary> diaries = diaryQueryRepository.findByYearMonthPaged(member.getId(), year, month, pageable);
+
+        List<DiaryMonthlyItemResponse> content = diaries.stream()
+                .map(diary -> new DiaryMonthlyItemResponse(
+                        diary.getId(),
+                        diary.getDate().toLocalDate(),
+                        diary.getImage() != null ? s3Service.getFileUrl(diary.getImage().getUrl()) : null,
+                        diary.getEmotion().getName(),
+                        diary.getCreatedAt()
+                ))
+                .toList();
+
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        boolean hasNext = (page + 1) < totalPages;
+
+        return new DiaryPageResponse<>(content, page, size, totalElements, totalPages, hasNext);
+    }
+
+    // 메인 홈 즐겨찾기 조회 페이징 처리
+    // - 사용자의 favorite=true인 일기를 페이징하여 조회
+    // - createdAt 내림차순(최신순) 정렬
+    // - 이미지 URL은 S3에서 presigned URL로 변환
+    @Transactional(readOnly = true)
+    public DiaryPageResponse<FavoriteDiaryItemResponse> getFavoriteDiariesPaged(
+            Member member, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        // 즐겨찾기 일기 총 개수 조회
+        long totalElements = diaryQueryRepository.countFavorites(member.getId());
+
+        // 페이징된 즐겨찾기 일기 목록 조회
+        List<Diary> diaries = diaryQueryRepository.findFavoritesPaged(member.getId(), pageable);
+
+        List<FavoriteDiaryItemResponse> content = diaries.stream()
+                .map(diary -> new FavoriteDiaryItemResponse(
+                        diary.getId(),
+                        diary.getDate().toLocalDate(),
+                        diary.getImage() != null ? s3Service.getFileUrl(diary.getImage().getUrl()) : null,
+                        diary.getCreatedAt()
+                ))
+                .toList();
+
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        boolean hasNext = (page + 1) < totalPages;
+
+        return new DiaryPageResponse<>(content, page, size, totalElements, totalPages, hasNext);
+    }
+
+    // 특정 tagId 기반 일기 조회 (페이징 처리)
+    // - 특정 태그가 지정된 일기를 날짜별로 그룹화하여 페이징 반환
+    // - date 내림차순 정렬
+    // - 각 날짜별로 일기 목록과 이미지 URL 포함
+    @Transactional(readOnly = true)
+    public DiaryPageResponse<DiaryTagSearchItemResponse> getDiariesByTagIdPaged(
+            Member member, Long tagId, int page, int size) {
+
+        if (tagId == null || tagId <= 0) {
+            throw new CustomException(DiaryExceptionResponseStatus.INVALID_TAG_ID);
+        }
+
+        // Pageable 객체 생성 (date 내림차순, createdAt 내림차순)
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by("date").descending()
+                        .and(Sort.by("createdAt").descending()));
+
+        long totalElements = diaryQueryRepository.countByTagId(member.getId(), tagId);
+
+        List<Diary> diaries = diaryQueryRepository.findByTagIdPaged(member.getId(), tagId, pageable);
+
+        Map<LocalDate, Map<Long, List<String>>> byDate = new TreeMap<>(Collections.reverseOrder());
+
+        for (Diary diary : diaries) {
+            LocalDate date = diary.getDate().toLocalDate();
+            String imageUrl = diary.getImage() != null
+                    ? s3Service.getFileUrl(diary.getImage().getUrl())
+                    : null;
+
+            byDate.computeIfAbsent(date, d -> new LinkedHashMap<>())
+                    .computeIfAbsent(diary.getId(), id -> new ArrayList<>())
+                    .add(imageUrl);
+        }
+
+        List<DiaryTagSearchItemResponse> content = byDate.entrySet().stream()
+                .map(entry -> {
+                    LocalDate date = entry.getKey();
+                    List<DiaryImageGroupResponse> groups = entry.getValue().entrySet().stream()
+                            .map(diaryEntry -> new DiaryImageGroupResponse(
+                                    diaryEntry.getKey(),
+                                    diaryEntry.getValue().stream()
+                                            .filter(Objects::nonNull)
+                                            .collect(Collectors.toList())
+                            ))
+                            .toList();
+                    return new DiaryTagSearchItemResponse(date, groups);
+                })
+                .toList();
+
+        // 페이징 정보 계산
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        boolean hasNext = (page + 1) < totalPages;
+
+        return new DiaryPageResponse<>(content, page, size, totalElements, totalPages, hasNext);
     }
 
 }

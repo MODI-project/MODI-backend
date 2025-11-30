@@ -4,6 +4,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import kuit.modi.domain.Diary;
 import kuit.modi.domain.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -306,4 +308,88 @@ public class DiaryQueryRepository {
                 .setParameter("maxLng", maxLng)
                 .getResultList();
     }
+
+    //일기 월별 조회 페이징처리
+    public List<Diary> findByYearMonthPaged(Long memberId, int year, int month, Pageable pageable) {
+        return em.createQuery(
+                        "SELECT d FROM Diary d " +
+                                "LEFT JOIN FETCH d.image " +
+                                "LEFT JOIN FETCH d.emotion " +
+                                "WHERE d.member.id = :memberId " +
+                                "AND FUNCTION('YEAR', d.date) = :year " +
+                                "AND FUNCTION('MONTH', d.date) = :month " +
+                                "ORDER BY d.createdAt DESC", Diary.class
+                )
+                .setParameter("memberId", memberId)
+                .setParameter("year", year)
+                .setParameter("month", month)
+                .setFirstResult((int) pageable.getOffset())
+                .setMaxResults(pageable.getPageSize())
+                .getResultList();
+    }
+
+    //즐겨찾기 조회 페이징
+    public List<Diary> findFavoritesPaged(Long memberId, Pageable pageable) {
+        return em.createQuery(
+                        "SELECT d FROM Diary d " +
+                                "LEFT JOIN FETCH d.image " +
+                                "WHERE d.member.id = :memberId " +
+                                "AND d.favorite = true " +
+                                "ORDER BY d.createdAt DESC", Diary.class
+                )
+                .setParameter("memberId", memberId)
+                .setFirstResult((int) pageable.getOffset())
+                .setMaxResults(pageable.getPageSize())
+                .getResultList();
+    }
+
+    // 즐겨찾기 일기 총 개수 카운트
+    public long countFavorites(Long memberId) {
+        return em.createQuery(
+                        "SELECT COUNT(d) FROM Diary d " +
+                                "WHERE d.member.id = :memberId " +
+                                "AND d.favorite = true", Long.class
+                )
+                .setParameter("memberId", memberId)
+                .getSingleResult();
+    }
+
+    // tagId 기반 페이징 조회
+    // - 특정 태그가 지정된 일기를 페이징하여 조회
+    // - createdAt 내림차순 정렬
+    // - 이미지 포함 LEFT JOIN
+    public List<Diary> findByTagIdPaged(Long memberId, Long tagId, Pageable pageable) {
+        return em.createQuery(
+                        "SELECT DISTINCT d FROM Diary d " +
+                                "LEFT JOIN FETCH d.image " +
+                                "WHERE d.member.id = :memberId " +
+                                "AND EXISTS (" +
+                                "  SELECT 1 FROM DiaryTag dt " +
+                                "  WHERE dt.diary = d AND dt.tag.id = :tagId" +
+                                ") " +
+                                "ORDER BY d.date DESC, d.createdAt DESC", Diary.class
+                )
+                .setParameter("memberId", memberId)
+                .setParameter("tagId", tagId)
+                .setFirstResult((int) pageable.getOffset())
+                .setMaxResults(pageable.getPageSize())
+                .getResultList();
+    }
+
+    // tagId 기반 일기 총 개수 카운트
+    // - 특정 태그가 지정된 일기의 개수 조회
+    public long countByTagId(Long memberId, Long tagId) {
+        return em.createQuery(
+                        "SELECT COUNT(DISTINCT d) FROM Diary d " +
+                                "WHERE d.member.id = :memberId " +
+                                "AND EXISTS (" +
+                                "  SELECT 1 FROM DiaryTag dt " +
+                                "  WHERE dt.diary = d AND dt.tag.id = :tagId" +
+                                ")", Long.class
+                )
+                .setParameter("memberId", memberId)
+                .setParameter("tagId", tagId)
+                .getSingleResult();
+    }
+
 }
