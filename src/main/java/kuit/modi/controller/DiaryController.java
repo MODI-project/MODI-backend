@@ -102,7 +102,7 @@ public class DiaryController {
     }
 
     // 특정 연/월의 일기 목록 조회 (월별 보기)
-    @GetMapping(params = {"year", "month"})
+    /*@GetMapping(params = {"year", "month"})
     public ResponseEntity<List<DiaryMonthlyItemResponse>> getMonthlyDiaries(
             @AuthenticationPrincipal Member member,
             @RequestParam(required = false) Integer year,
@@ -114,15 +114,35 @@ public class DiaryController {
 
         List<DiaryMonthlyItemResponse> diaries = diaryQueryService.getMonthlyDiaries(year, month, member);
         return ResponseEntity.ok(diaries);
+    }*/
+    @GetMapping(params = {"year", "month"})
+    public ResponseEntity<DiaryPageResponse<DiaryMonthlyItemResponse>> getMonthlyDiaries(
+            @AuthenticationPrincipal Member member,
+            @RequestParam int year,
+            @RequestParam int month,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        if (year <= 0 || month < 1 || month > 12) {
+            throw new CustomException(DiaryExceptionResponseStatus.INVALID_YEAR_MONTH);
+        }
+
+        DiaryPageResponse<DiaryMonthlyItemResponse> response =
+                diaryQueryService.getMonthlyDiariesPaged(year, month, member, page, size);
+        return ResponseEntity.ok(response);
     }
 
-    // 즐겨찾기한 일기 목록 조회
+    // 즐겨찾기한 일기 목록 조회 (페이징 처리)
+    // - 사용자가 즐겨찾기한 일기를 페이징하여 반환
     @GetMapping("/favorites")
-    public ResponseEntity<List<FavoriteDiaryItemResponse>> getFavoriteDiaries(
-            @AuthenticationPrincipal Member member
+    public ResponseEntity<DiaryPageResponse<FavoriteDiaryItemResponse>> getFavoriteDiaries(
+            @AuthenticationPrincipal Member member,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
     ) {
-        List<FavoriteDiaryItemResponse> favorites = diaryQueryService.getFavoriteDiaries(member);
-        return ResponseEntity.ok(favorites);
+        DiaryPageResponse<FavoriteDiaryItemResponse> response =
+                diaryQueryService.getFavoriteDiariesPaged(member, page, size);
+        return ResponseEntity.ok(response);
     }
 
     // 월간 통계 조회 API
@@ -145,6 +165,27 @@ public class DiaryController {
         // 핸들러가 실제로 매칭되는지, 값이 뭘로 들어오는지 확인
         log.info("GET /diaries?tagName={} (memberId={})", tagName, member != null ? member.getId() : null);
         return ResponseEntity.ok(diaryQueryService.getDiariesByTagName(tagName, member));
+    }
+
+    // 태그 ID 기반 일기 검색 (페이징 처리)
+    // - tagId를 기반으로 해당 태그가 지정된 일기를 조회
+    // - 날짜별로 자동 그룹화하여 반환
+    // - date 내림차순 정렬
+    @GetMapping("/by-tag")
+    public ResponseEntity<DiaryPageResponse<DiaryTagSearchItemResponse>> getDiariesByTagId(
+            @AuthenticationPrincipal Member member,
+            @RequestParam Long tagId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        // size 최대값 제한
+        if (size > 100) {
+            size = 100;
+        }
+
+        DiaryPageResponse<DiaryTagSearchItemResponse> response =
+                diaryQueryService.getDiariesByTagIdPaged(member, tagId, page, size);
+        return ResponseEntity.ok(response);
     }
 
     // 많이 쓰이는 태그 조회
